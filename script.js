@@ -676,7 +676,15 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
       stem.style.opacity=local>0 ? '1' : '.35';
     });
 
-    blooms.forEach((bloom,index)=>{
+    const clickedBlooms=new Set();
+
+  blooms.forEach((bloom,index)=>{
+      if(clickedBlooms.has(index)){
+        bloom.style.opacity='1';
+        bloom.style.transformOrigin='center';
+        bloom.style.transform='scale(1)';
+        return;
+      }
       const start=0.18+(index*0.18);
       const local=clamp((p-start)/0.16);
       const eased=local*local*(3-2*local);
@@ -704,6 +712,9 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
     bloom.setAttribute('tabindex','0');
     bloom.setAttribute('role','button');
     const activate=()=>{
+      clickedBlooms.add(index);
+      bloom.style.opacity='1';
+      bloom.style.transform='scale(1)';
       bloom.classList.remove('garden-flower-pop');
       void bloom.offsetWidth;
       bloom.classList.add('garden-flower-pop');
@@ -757,7 +768,7 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
         const local = clamp((distance - 0.04) / 0.16);
         const y = active ? (p < center ? 18 : -18) * local : (i < p*n ? -34 : 34);
         const scale = active ? 1 : 0.92;
-        const opacity = active ? 1 : 0.22;
+        const opacity = active ? 1 : 0.72;
         card.style.setProperty('--story-y', y.toFixed(2)+'px');
         card.style.setProperty('--story-scale', scale);
         card.style.setProperty('--story-opacity', opacity);
