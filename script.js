@@ -825,32 +825,44 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
   function scatter(){
     if(!scene) return;
     const cards=$$('.story-photo',scene);
-    const mobile=innerWidth<=560;
-    const tablet=innerWidth>560&&innerWidth<=900;
-    const height=mobile?3000:tablet?2200:1900;
-    const width=mobile?78:tablet?112:155;
+    const mobile=window.innerWidth<=560;
+    const tablet=window.innerWidth>560&&window.innerWidth<=900;
+    const cols=mobile?5:(tablet?7:9);
+    const colStep=mobile?18.8:(tablet?14.2:11.1);
+    const rowStep=mobile?9.9:(tablet?10.4:10.2);
+    const height=mobile?2300:(tablet?1700:1400);
+
     if(table){
       table.style.setProperty('height',height+'px','important');
       table.style.setProperty('min-height',height+'px','important');
     }
     scene.style.setProperty('height',height+'px','important');
+
     cards.forEach((card,i)=>{
-      const x=3+seed(i+1)*94;
-      const y=3+seed(i+101)*94;
-      const r=-27+seed(i+201)*54;
-      const sc=0.72+seed(i+301)*0.40;
-      card.style.setProperty('position','absolute','important');
-      card.style.setProperty('left',x+'%','important');
-      card.style.setProperty('top',y+'%','important');
-      card.style.setProperty('width',width+'px','important');
-      card.style.setProperty('height',Math.round(width*1.25)+'px','important');
+      const row=Math.floor(i/cols);
+      const col=i%cols;
+      const jitterX=((i*17)%7)-3;
+      const jitterY=((i*29)%6)-3;
+      const x=6+(col*colStep)+jitterX;
+      const y=5+(row*rowStep)+jitterY;
+      const rotation=-13+((i*17)%27);
+      const scale=(0.84+(((i*23)%25)/100)).toFixed(2);
+
+      card.style.setProperty('--photo-x',x+'%');
+      card.style.setProperty('--photo-y',y+'%');
+      card.style.setProperty('--rotation',rotation+'deg');
+      card.style.setProperty('--base-scale',scale);
+      card.style.removeProperty('left');
+      card.style.removeProperty('top');
+      card.style.removeProperty('width');
+      card.style.removeProperty('height');
       card.style.setProperty('opacity','1','important');
       card.style.setProperty('visibility','visible','important');
       card.style.setProperty('display','block','important');
       card.style.setProperty('pointer-events','auto','important');
-      card.style.setProperty('transform','translate(-50%,-50%) rotate('+r+'deg) scale('+sc+')','important');
-      card.style.setProperty('z-index',String(10+Math.floor(seed(i+401)*900)),'important');
+      card.style.setProperty('z-index',String(10+(i%7)),'important');
       card.classList.add('softy-photo-ready');
+
       const img=$('img',card);
       if(img) img.loading='eager';
     });
