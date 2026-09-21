@@ -640,6 +640,43 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
   const blooms=Array.from(canvas.querySelectorAll('.bloom'));
   if(!stems.length || !blooms.length) return;
 
+  const clickedBlooms=new Set();
+  const flowerNames=['a little hello ♡','just because ♡','for your happy days ♡','one more for you ♡'];
+
+  function flowerPoint(index){
+    const points=[
+      {x:275,y:68},
+      {x:525,y:75},
+      {x:795,y:62},
+      {x:1082,y:70}
+    ];
+    return points[index]||points[0];
+  }
+
+  function showFlowerMessage(index){
+    document.getElementById('gardenFlowerMessage')?.remove();
+    const note=document.createElement('div');
+    note.id='gardenFlowerMessage';
+    note.className='garden-flower-message';
+    note.textContent=flowerNames[index]||'just for you ♡';
+    section.appendChild(note);
+    window.setTimeout(()=>note.remove(),1800);
+  }
+
+  function bloomFlower(index){
+    const bloom=blooms[index];
+    if(!bloom) return;
+
+    clickedBlooms.add(index);
+    bloom.style.opacity='1';
+    bloom.style.transformOrigin='center';
+    bloom.style.transform='scale(1)';
+    bloom.classList.remove('garden-flower-pop');
+    void bloom.offsetWidth;
+    bloom.classList.add('garden-flower-pop');
+    showFlowerMessage(index);
+  }
+
   stems.forEach(stem=>{
     try{
       const length=stem.getTotalLength();
@@ -653,9 +690,13 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
 
   blooms.forEach(bloom=>{
     bloom.style.opacity='0';
-    bloom.style.transform='translate(var(--bx), var(--by)) scale(.08)';
+    bloom.style.transform='scale(.08)';
     bloom.style.transformOrigin='center';
     bloom.style.transformBox='fill-box';
+    bloom.style.pointerEvents='auto';
+    bloom.style.cursor='pointer';
+    bloom.setAttribute('tabindex','0');
+    bloom.setAttribute('role','button');
   });
 
   function gardenProgress(){
@@ -663,8 +704,6 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
     const travel=Math.max(1,rect.height-window.innerHeight);
     return clamp((window.innerHeight*0.58-rect.top)/travel);
   }
-
-  const clickedBlooms=new Set();
 
   function updateGardenStory(){
     const p=gardenProgress();
@@ -681,15 +720,14 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
     blooms.forEach((bloom,index)=>{
       if(clickedBlooms.has(index)){
         bloom.style.opacity='1';
-        bloom.style.transformOrigin='center';
         bloom.style.transform='scale(1)';
         return;
       }
+
       const start=0.18+(index*0.18);
       const local=clamp((p-start)/0.16);
       const eased=local*local*(3-2*local);
       bloom.style.opacity=String(eased);
-      bloom.style.transformOrigin='center';
       bloom.style.transform='scale('+String(0.08+(eased*.92))+')';
     });
 
@@ -707,34 +745,49 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
   window.addEventListener('resize',schedule,{passive:true});
   schedule();
 
+  /* Direct canvas interaction: no SVG hit-test dependency. */
+  const activateNearestFlower=(event)=>{
+    const rect=canvas.getBoundingClientRect();
+    if(!rect.width||!rect.height) return;
+
+    const svgX=((event.clientX-rect.left)/rect.width)*1200;
+    const svgY=((event.clientY-rect.top)/rect.height)*420;
+
+    let nearest=0;
+    let distance=Infinity;
+    for(let index=0;index<blooms.length;index++){
+      const point=flowerPoint(index);
+      const dx=svgX-point.x;
+      const dy=svgY-point.y;
+      const d=(dx*dx)+(dy*dy);
+      if(d<distance){
+        distance=d;
+        nearest=index;
+      }
+    }
+
+    bloomFlower(nearest);
+    schedule();
+  };
+
+  canvas.addEventListener('click',activateNearestFlower);
+  canvas.addEventListener('pointerup',event=>{
+    if(event.pointerType==='touch') activateNearestFlower(event);
+  });
+
   blooms.forEach((bloom,index)=>{
-    bloom.style.cursor='pointer';
-    bloom.setAttribute('tabindex','0');
-    bloom.setAttribute('role','button');
-    const activate=()=>{
-      clickedBlooms.add(index);
-      bloom.style.opacity='1';
-      bloom.style.transform='scale(1)';
-      bloom.classList.remove('garden-flower-pop');
-      void bloom.offsetWidth;
-      bloom.classList.add('garden-flower-pop');
-      const flowerNames=['a little hello ♡','just because ♡','for your happy days ♡','one more for you ♡'];
-      const existing=document.getElementById('gardenFlowerMessage');
-      if(existing) existing.remove();
-      const note=document.createElement('div');
-      note.id='gardenFlowerMessage';
-      note.className='garden-flower-message';
-      note.textContent=flowerNames[index]||'just for you ♡';
-      section.appendChild(note);
-      window.setTimeout(()=>note.remove(),1800);
-    };
-    bloom.addEventListener('click',activate);
-    bloom.addEventListener('keydown',e=>{
-      if(e.key==='Enter'||e.key===' '){e.preventDefault();activate();}
+    bloom.addEventListener('click',event=>{
+      event.stopPropagation();
+      bloomFlower(index);
+    });
+    bloom.addEventListener('keydown',event=>{
+      if(event.key==='Enter'||event.key===' '){
+        event.preventDefault();
+        bloomFlower(index);
+      }
     });
   });
-})();
-
+}
 /* ================= SOFTY FINAL INTERACTION REPAIR =================
    This pass intentionally overrides the earlier experimental scroll/photo/music
    implementations instead of stacking another dependency on top of them.
