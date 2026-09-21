@@ -781,3 +781,18 @@ body.modal-open{overflow:hidden}
   #memories .memory-table{height:3000px!important;min-height:3000px!important}
   #memories .story-photo{width:clamp(72px,20vw,104px)!important}
 }
+
+/* ===== static photo wall + native vinyl player ===== */
+.memory-table{position:relative!important;height:1550px!important;width:min(1120px,92vw)!important;margin:38px auto 0!important;overflow:visible!important}
+.memory-scene{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}
+.story-photo{left:var(--photo-x)!important;top:var(--photo-y)!important;transform:translate(-50%,-50%) rotate(var(--rotation)) scale(var(--base-scale))!important;opacity:1!important;filter:none!important;pointer-events:auto!important}
+.story-photo:hover{transform:translate(-50%,-50%) rotate(var(--rotation)) scale(calc(var(--base-scale) + .08))!important;z-index:500!important}
+.music-player{position:fixed!important;right:22px!important;bottom:22px!important;z-index:5000!important}
+.music-player>summary{list-style:none!important}
+.music-player>summary::-webkit-details-marker{display:none!important}
+.music-player[open] .player-panel{opacity:1!important;pointer-events:auto!important;transform:none!important}
+.music-player:not([open]) .player-panel{opacity:0!important;pointer-events:none!important}
+.player-toggle.vinyl-record{display:block!important;cursor:pointer!important;outline:none}
+#softyAudio{display:none!important}
+@media(max-width:900px){.memory-table{height:1750px!important}}
+@media(max-width:560px){.memory-table{height:2400px!important;width:94vw!important}}
