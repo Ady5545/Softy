@@ -1901,3 +1901,15 @@ body.modal-open{overflow:hidden}
   .softy-chat-copy{padding:0 8px;font-size:9px}
   .softy-chat-leave{padding:0 8px}
 }
+
+
+/* ===== final room-143 chat cleanup ===== */
+.softy-chat-room[hidden]{display:none!important}
+.softy-chat-room-card strong{letter-spacing:.01em}
+.softy-chat-room-card small{display:block}
+.softy-chat-room.live .softy-chat-room-card small{color:#7d345a}
+.softy-chat-empty.hidden{display:none!important}
+.softy-chat-bubble-wrap.me{justify-content:flex-end}
+.softy-chat-bubble-wrap.them{justify-content:flex-start}
+.softy-chat-bubble-wrap.me .softy-chat-bubble{border-radius:18px 18px 6px 18px}
+.softy-chat-bubble-wrap.them .softy-chat-bubble{border-radius:18px 18px 18px 6px}
