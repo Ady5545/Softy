@@ -391,21 +391,25 @@ function updateMemoryStory(){
   const cards=qsa('.story-photo',memoryScene);
   if(!cards.length) return;
   const center=p*(cards.length-1);
-  const finale=clamp((p-.92)/.08);
+  const dealProgress=clamp(p/.72);
 
   cards.forEach((card,index)=>{
-    const dist=Math.abs(index-center);
     const baseScale=parseFloat(card.style.getPropertyValue('--base-scale')||'1');
-    const baseX=parseFloat((card.style.left||'0').replace('vw',''))||0;
-    const baseY=parseFloat((card.style.top||'0').replace('vh',''))||0;
-    const driftX=Math.sin((index+1)*.73+p*Math.PI*2)*1.8;
-    const driftY=Math.cos((index+1)*.51+p*Math.PI*2)*1.8;
-    const isActive=dist<.55;
-    const scale=isActive?baseScale*1.14:baseScale;
-    card.style.opacity='1';
+    const baseX=parseFloat((card.style.left||'50').replace('vw',''))||50;
+    const baseY=parseFloat((card.style.top||'50').replace('vh',''))||50;
+    const start=(index/cards.length)*.62;
+    const local=clamp((dealProgress-start)/.38);
+    const ease=local*local*(3-2*local);
+    const driftX=Math.sin((index+1)*.73+p*Math.PI*2)*.5;
+    const driftY=Math.cos((index+1)*.51+p*Math.PI*2)*.5;
+    const fromX=(50-baseX)*ease;
+    const fromY=(50-baseY)*ease;
+    const isActive=Math.abs(index-center)<.55 && p>.12;
+    const scale=(.42+(0.58*ease))*baseScale*(isActive?1.14:1);
+    card.style.opacity=String(.12+.88*ease);
     card.style.filter='none';
-    card.style.transform='translate3d('+driftX.toFixed(2)+'vw,'+driftY.toFixed(2)+'vh,0) rotate(var(--rotation)) scale('+scale.toFixed(3)+')';
-    card.style.zIndex=String(10+Math.round((90-dist))+ (isActive?160:0));
+    card.style.transform='translate3d('+((1-ease)*fromX+driftX).toFixed(2)+'vw,'+((1-ease)*fromY+driftY).toFixed(2)+'vh,0) rotate(var(--rotation)) scale('+scale.toFixed(3)+')';
+    card.style.zIndex=String(10+index+(isActive?300:0));
     card.classList.toggle('is-active',isActive);
   });
 
@@ -415,11 +419,11 @@ function updateMemoryStory(){
   if(memoryStoryText) memoryStoryText.textContent=stageCopy[2];
   if(memoryStoryNumber) memoryStoryNumber.textContent=String(Math.min(cards.length,Math.floor(center)+1)).padStart(2,'0');
   if(memoryStoryCopy){
-    memoryStoryCopy.style.transform='translateY('+(Math.sin(p*Math.PI*4)*7)+'px) scale('+(1-finale*.03)+')';
-    memoryStoryCopy.style.opacity=String(finale>.72?.18:1);
+    memoryStoryCopy.style.transform='translateY('+(Math.sin(p*Math.PI*4)*7)+'px) scale('+(1-clamp((p-.84)/.16)*.03)+')';
+    memoryStoryCopy.style.opacity=String(p>.86?.2:1);
   }
-  if(memoryStorySticky) memoryStorySticky.classList.toggle('is-finale',finale>.72);
-  if(memoryStoryFinale) memoryStoryFinale.style.opacity=String(finale);
+  if(memoryStorySticky) memoryStorySticky.classList.toggle('is-finale',p>.82);
+  if(memoryStoryFinale) memoryStoryFinale.style.opacity=String(clamp((p-.82)/.18));
 }
 buildMemoryStory();
 requestAnimationFrame(()=>updateMemoryStory());
@@ -462,6 +466,9 @@ if(photoModalNext) photoModalNext.addEventListener('click',()=>stepPhoto(1));
 if(photoModal) photoModal.addEventListener('click',e=>{if(e.target===photoModal) closePhotoModal()});
 
 const playlist=[
+  ["Me Gustas Tu — Sped Up","manu-chao-me-gustas-tu-sped-up-version-official-audio-128kbps.mp3"],
+  ["Thinking of You — AP Dhillon — Alternate","thinking-of-you-official-audio-ap-dhillon-256kbps.webm"],
+
   ["Until I Found You — Solo","stephen-sanchez-until-i-found-you-official-video-256kbps.webm"],
   ["Until I Found You — Em Beihold Version","until-i-found-you-em-beihold-version-256kbps.webm"],
   ["Here With Me","d4vd-here-with-me-official-music-video-128kbps.mp4"],
