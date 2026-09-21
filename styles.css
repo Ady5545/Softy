@@ -1913,3 +1913,434 @@ body.modal-open{overflow:hidden}
 .softy-chat-bubble-wrap.them{justify-content:flex-start}
 .softy-chat-bubble-wrap.me .softy-chat-bubble{border-radius:18px 18px 6px 18px}
 .softy-chat-bubble-wrap.them .softy-chat-bubble{border-radius:18px 18px 18px 6px}
+
+
+/* ================================================================
+   SOFTY · MOBILE + TABLET MASTER PASS
+   Final responsive layer. Keeps the desktop art direction intact.
+================================================================ */
+
+/* Prevent mobile browsers from inventing horizontal scroll and make
+   interactive elements feel native without changing the desktop layout. */
+html{
+  overflow-x:hidden;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+  scroll-padding-top:18px;
+}
+body{
+  min-width:0;
+  overflow-x:hidden;
+  overscroll-behavior-x:none;
+}
+img,svg,video,canvas{
+  max-width:100%;
+}
+button,input,textarea,select{
+  font:inherit;
+}
+button,a,[role="button"],summary{
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+@media (pointer:coarse){
+  button,a,[role="button"],summary{
+    min-height:44px;
+  }
+  input,textarea,select{
+    min-height:46px;
+  }
+}
+
+/* ---------- tablets ---------- */
+@media (min-width:561px) and (max-width:1024px){
+  .section-shell{
+    width:min(92vw,900px);
+  }
+
+  .hero{
+    min-height:calc(100svh - 20px);
+    padding:74px 0 58px;
+  }
+  .hero-copy{
+    max-width:760px;
+  }
+  .hero-text{
+    font-size:clamp(15px,2.05vw,18px);
+    line-height:1.7;
+  }
+  .hero-actions{
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .chapter-grid{
+    width:min(90vw,760px);
+  }
+  .softy-story-card,
+  .chapter-card{
+    max-width:min(680px,88vw);
+  }
+
+  .garden-section{
+    min-height:180svh;
+  }
+  .garden-canvas{
+    width:min(92vw,820px);
+  }
+
+  .night-sky-inner{
+    width:min(92vw,900px);
+  }
+  .night-sky-stage{
+    min-height:560px;
+  }
+
+  .bouquet-stage,
+  .bouquet-canvas{
+    width:min(92vw,860px);
+  }
+
+  .open-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .music-player{
+    right:18px;
+    bottom:calc(18px + env(safe-area-inset-bottom));
+    max-width:min(390px,calc(100vw - 36px));
+  }
+
+  .softy-chat-panel{
+    width:min(430px,calc(100vw - 36px));
+    max-height:min(720px,calc(100svh - 96px));
+  }
+}
+
+/* ---------- phones ---------- */
+@media (max-width:560px){
+  :root{
+    --mobile-gutter:18px;
+  }
+
+  .section-shell{
+    width:calc(100% - (var(--mobile-gutter) * 2));
+    max-width:none;
+  }
+
+  section{
+    scroll-margin-top:14px;
+  }
+
+  /* Hero: compact enough for one-handed browsing, still editorial. */
+  .hero{
+    min-height:calc(100svh - 8px);
+    padding:56px 0 42px;
+  }
+  .hero-copy,
+  .hero-text{
+    width:100%;
+  }
+  .hero h1{
+    font-size:clamp(38px,11.5vw,58px);
+    line-height:.98;
+    letter-spacing:-.045em;
+  }
+  .hero-text{
+    max-width:34rem;
+    font-size:15px;
+    line-height:1.65;
+  }
+  .hero-actions{
+    display:grid;
+    grid-template-columns:1fr;
+    width:100%;
+    gap:9px;
+  }
+  .hero-actions a,
+  .hero-actions button{
+    width:100%;
+    justify-content:center;
+  }
+
+  /* Headings never collide with the viewport edges. */
+  .section-heading{
+    width:100%;
+    max-width:100%;
+    padding-left:0;
+    padding-right:0;
+  }
+  .section-heading h2,
+  .garden-heading h2,
+  .night-sky-copy h2,
+  .bouquet-section h2{
+    font-size:clamp(30px,9vw,44px);
+    line-height:1.02;
+    letter-spacing:-.035em;
+  }
+
+  /* Chapter story: don't let sticky/absolute cards become a tiny scroll
+     trap on phones. Preserve the animation but give it breathing room. */
+  .softy-scroll-story .section-heading{
+    min-height:174px;
+    height:174px;
+    padding-top:28px;
+  }
+  .chapter-grid{
+    width:calc(100% - 20px);
+    margin:0 auto;
+    padding-top:198px;
+  }
+  .softy-story-card,
+  .chapter-card{
+    width:100%;
+    max-width:none;
+    min-height:280px;
+    padding:24px 20px;
+    border-radius:22px;
+  }
+  .softy-story-card h3,
+  .chapter-card h3{
+    font-size:clamp(24px,7vw,34px);
+    line-height:1.04;
+  }
+  .softy-story-card p,
+  .chapter-card p{
+    font-size:14px;
+    line-height:1.6;
+  }
+
+  /* Scattered photo wall stays tactile, but never lets a card escape
+     the phone viewport. */
+  .story-photo{
+    max-width:31vw;
+  }
+
+  /* Garden. */
+  .garden-section{
+    min-height:165svh;
+    overflow:clip;
+  }
+  .garden-heading{
+    padding-left:var(--mobile-gutter);
+    padding-right:var(--mobile-gutter);
+  }
+  .garden-canvas{
+    width:100%;
+    min-height:360px;
+    margin-inline:auto;
+  }
+  .garden-svg{
+    width:100%;
+    height:auto;
+  }
+
+  /* Night sky. */
+  .night-sky-section{
+    overflow:clip;
+  }
+  .night-sky-inner{
+    width:100%;
+    padding-inline:var(--mobile-gutter);
+  }
+  .night-sky-copy{
+    max-width:100%;
+  }
+  .night-sky-copy p{
+    font-size:14px;
+    line-height:1.6;
+  }
+  .night-sky-stage{
+    width:100%;
+    min-height:500px;
+    margin-top:20px;
+    border-radius:26px;
+  }
+  .night-sky-note{
+    left:12px;
+    right:12px;
+    bottom:14px;
+    width:auto;
+    max-width:none;
+    padding:18px 18px 17px;
+  }
+  .night-sky-note p{
+    font-size:14px;
+    line-height:1.55;
+  }
+  .night-sky-hint{
+    bottom:14px;
+    font-size:10px;
+  }
+
+  /* Bouquet / interactive canvases. */
+  .bouquet-stage,
+  .bouquet-canvas{
+    width:100%;
+    max-width:100%;
+    overflow:hidden;
+  }
+
+  /* Open-when cards become a comfortable single column. */
+  .open-grid{
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  .open-card{
+    min-height:132px;
+    padding:20px;
+  }
+
+  /* Modals: use almost the whole phone, respect browser safe areas. */
+  .modal-backdrop,
+  .photo-modal{
+    padding:
+      max(12px,env(safe-area-inset-top))
+      12px
+      max(12px,env(safe-area-inset-bottom))
+      12px;
+  }
+  .modal-paper{
+    width:min(100%,560px);
+    max-height:calc(100svh - 24px);
+    overflow:auto;
+    border-radius:24px;
+    padding:24px 19px;
+  }
+  .modal-close,
+  .photo-modal-close{
+    min-width:44px;
+    min-height:44px;
+  }
+  .photo-modal{
+    inset:0;
+  }
+  .photo-modal-figure{
+    width:100%;
+    max-height:calc(100svh - 130px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .photo-modal-figure img{
+    max-width:100%;
+    max-height:calc(100svh - 150px);
+    object-fit:contain;
+  }
+  .photo-modal-nav{
+    width:100%;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .photo-modal-prev,
+  .photo-modal-next{
+    min-width:48px;
+    min-height:48px;
+  }
+
+  /* Fixed controls live inside the phone safe area and don't cover
+     each other. */
+  .music-player{
+    left:12px;
+    right:12px;
+    bottom:calc(12px + env(safe-area-inset-bottom));
+    width:auto;
+    max-width:none;
+  }
+  .music-player .music-controls{
+    min-width:0;
+  }
+
+  .softy-chat{
+    right:12px;
+    bottom:calc(74px + env(safe-area-inset-bottom));
+    left:auto;
+  }
+  .softy-chat-fab{
+    min-width:52px;
+    min-height:52px;
+  }
+  .softy-chat-panel{
+    position:fixed;
+    left:10px;
+    right:10px;
+    bottom:calc(72px + env(safe-area-inset-bottom));
+    width:auto;
+    max-width:none;
+    height:min(700px,calc(100svh - 94px));
+    max-height:calc(100svh - 94px);
+    border-radius:25px;
+  }
+  .softy-chat-head{
+    padding:15px 14px 13px;
+  }
+  .softy-chat-body{
+    min-height:0;
+  }
+  .softy-chat-messages{
+    min-height:0;
+    flex:1 1 auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  .softy-chat-compose{
+    position:sticky;
+    bottom:0;
+    padding:
+      9px 10px
+      calc(9px + env(safe-area-inset-bottom))
+      10px;
+    background:rgba(255,250,247,.97);
+    backdrop-filter:blur(12px);
+  }
+  .softy-chat-compose input{
+    min-width:0;
+    font-size:16px; /* prevents iOS Safari auto-zoom */
+  }
+  .softy-chat-send,
+  .softy-chat-heart{
+    min-width:44px;
+    min-height:44px;
+  }
+  .softy-chat-live-note{
+    padding-bottom:4px;
+  }
+
+  /* Footer and final note. */
+  .footer-card{
+    width:100%;
+    padding:26px 20px;
+  }
+}
+
+/* Small phones: prioritize readability over density. */
+@media (max-width:380px){
+  :root{--mobile-gutter:14px}
+  .hero{padding-top:48px}
+  .hero h1{font-size:clamp(34px,11vw,46px)}
+  .story-photo{max-width:34vw}
+  .night-sky-stage{min-height:430px}
+  .softy-chat-panel{
+    left:6px;
+    right:6px;
+    border-radius:22px;
+  }
+  .softy-chat-head h2{font-size:18px}
+}
+
+/* Landscape phones: don't waste the whole screen on the fixed chat. */
+@media (max-width:900px) and (orientation:landscape) and (max-height:600px){
+  .hero{
+    min-height:auto;
+    padding-top:40px;
+    padding-bottom:40px;
+  }
+  .softy-chat-panel{
+    height:calc(100svh - 28px);
+    max-height:calc(100svh - 28px);
+    bottom:14px;
+  }
+  .softy-chat-messages{
+    max-height:calc(100svh - 180px);
+  }
+}
