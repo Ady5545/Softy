@@ -42,7 +42,7 @@
         <button class="player-play" type="button" id="playTrack" aria-label="Play">▶</button>
         <button type="button" id="nextTrack" aria-label="Next song">↷</button>
       </div>
-      <p class="player-note">41 songs are queued in your private music corner · shuffled every visit.</p>
+      <p class="player-note">41 songs live in your private music corner · the order changes every visit.</p>
     </div>
   </div>
 
@@ -147,19 +147,33 @@
       </div>
     </section>
 
-    <section class="section-shell memories-section">
-      <div class="section-heading reveal">
-        <p class="eyebrow">04 · our little archive</p>
-        <h2>Somewhere between<br /><em>then & now.</em></h2>
-        <p>Every photo you sent belongs here. The archive is ready for the full collection.</p>
-      </div>
-      <div class="memory-grid" id="memoryGrid">
-        <div class="memory-placeholder tall reveal"><span>your photos<br />will go here ♡</span></div>
-        <div class="memory-placeholder reveal"><span>tiny moments</span></div>
-        <div class="memory-placeholder reveal"><span>big smiles</span></div>
-        <div class="memory-placeholder wide reveal"><span>the kind of memory that deserves its own screen</span></div>
+    <section class="memory-scrollytelling" id="memories" aria-label="A scrolling story of our photos">
+      <div class="memory-story-sticky">
+        <div class="memory-story-copy" id="memoryStoryCopy">
+          <p class="eyebrow">04 · our little archive</p>
+          <h2 id="memoryStoryTitle">A little moment.<br /><em>Then another.</em></h2>
+          <p id="memoryStoryText">Keep scrolling. The photographs will find their own places around you.</p>
+          <div class="memory-story-meta"><span id="memoryStoryNumber">01</span><span class="memory-story-dash"></span><span id="memoryStoryTotal">90</span></div>
+        </div>
+        <div class="memory-scene" id="memoryScene" aria-live="polite"></div>
+        <div class="memory-story-hint">scroll to wander through them <span>↓</span></div>
+        <div class="memory-story-finale" id="memoryStoryFinale">
+          <p class="eyebrow">all the little things</p>
+          <h3>Somehow, they<br /><em>look like a life.</em></h3>
+          <p>Every frame, everywhere, all at once.</p>
+        </div>
       </div>
     </section>
+
+    <div id="photoModal" class="photo-modal" aria-hidden="true">
+      <button class="photo-modal-close" id="photoModalClose" type="button" aria-label="Close photo">×</button>
+      <button class="photo-modal-nav photo-modal-prev" id="photoModalPrev" type="button" aria-label="Previous photo">←</button>
+      <figure class="photo-modal-figure">
+        <img id="photoModalImage" alt="" />
+        <figcaption id="photoModalCaption"></figcaption>
+      </figure>
+      <button class="photo-modal-nav photo-modal-next" id="photoModalNext" type="button" aria-label="Next photo">→</button>
+    </div>
 
     <section class="section-shell open-when-section">
       <div class="section-heading reveal">
@@ -226,7 +240,7 @@
     </article>
   </div>
 
-  <div id="unlockModal" class="modal" aria-hidden="true"><div class="modal-backdrop" data-close="unlock"></div><article class="modal-paper lock-paper"><button class="modal-close" data-close="unlock" aria-label="Close">×</button><div class="lock-icon" id="lockIcon">🔒</div><p class="eyebrow">a tiny secret</p><h2>Unlock My Heart</h2><p>Some doors are worth opening slowly. Enter the little code that means something to you.</p><div class="lock-code" id="lockCode">♡ · ♡ · ♡</div><button class="primary-button" id="unlockHeart" type="button">unlock my heart ♡</button><p class="lock-status" id="lockStatus"></p></article></div>
+  <div id="unlockModal" class="modal" aria-hidden="true"><div class="modal-backdrop" data-close="unlock"></div><article class="modal-paper lock-paper"><button class="modal-close" data-close="unlock" aria-label="Close">×</button><div class="lock-icon" id="lockIcon">🔒</div><p class="eyebrow">a tiny secret</p><h2>Unlock My Heart</h2><p>Some doors are worth opening slowly. Press the little key when you are ready.</p><div class="lock-code" id="lockCode">♡ · ♡ · ♡</div><button class="primary-button" id="unlockHeart" type="button">unlock my heart ♡</button><p class="lock-status" id="lockStatus"></p></article></div>
 
   <div id="messageModal" class="modal" aria-hidden="true">
     <div class="modal-backdrop" data-close="message"></div>
