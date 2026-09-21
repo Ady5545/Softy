@@ -12,6 +12,7 @@
   <div class="ambient ambient-one"></div>
   <div class="ambient ambient-two"></div>
   <div id="petals" class="petals" aria-hidden="true"></div>
+  <div class="heart-cursor" id="heartCursor" aria-hidden="true">♥</div>
 
   <div class="scroll-progress" aria-hidden="true"><span id="scrollProgress"></span></div>
   <header class="topbar">
@@ -53,6 +54,7 @@
         <p class="hero-text">A place for all the things that are too cute, too random, or too important to leave buried in a chat.</p>
         <div class="hero-actions">
           <a class="primary-button" href="#bouquet">open the flowers <span>↓</span></a>
+          <button id="unlockButton" class="text-button" type="button">🔒 unlock my heart</button>
           <button id="letterButton" class="text-button" type="button">there's a letter for you</button>
         </div>
       </div>
@@ -66,6 +68,22 @@
     </section>
 
     <section class="scroll-story" aria-label="A little visual story"><div class="story-sticky"><div class="story-orbit orbit-one"></div><div class="story-orbit orbit-two"></div><div class="story-flower">✿</div><div class="story-copy"><p class="eyebrow">a little visual story</p><h2 id="storyTitle">It starts<br /><em>with a feeling.</em></h2><p id="storyText">Scroll slowly. The page will carry the story forward with you.</p></div><div class="story-number"><span id="storyNumber">01</span><i></i><span>04</span></div></div></section>
+
+    <section class="garden-section section-shell" id="garden" aria-label="Blooming flower garden">
+      <div class="garden-heading reveal"><p class="eyebrow">a garden, just for you</p><h2>Let the little<br /><em>flowers bloom.</em></h2><p>Keep scrolling. They grow with you.</p></div>
+      <div class="garden-canvas" id="gardenCanvas" aria-hidden="true">
+        <svg class="garden-svg" viewBox="0 0 1200 560" preserveAspectRatio="none">
+          <path class="garden-stem" d="M80 560 C120 430 100 350 180 250 C230 190 260 140 280 60" />
+          <path class="garden-stem" d="M340 560 C360 450 450 410 430 300 C420 220 470 160 510 90" />
+          <path class="garden-stem" d="M650 560 C630 430 710 390 700 280 C690 190 760 130 790 55" />
+          <path class="garden-stem" d="M930 560 C900 430 980 390 960 280 C940 200 1010 145 1080 70" />
+          <g class="bloom bloom-one" transform="translate(280 60)"><circle r="15"/><path d="M0-16 C-60-70-95-10-30 12 C-85 50-25 75 0 28 C25 75 85 50 30 12 C95-10 60-70 0-16Z"/></g>
+          <g class="bloom bloom-two" transform="translate(510 90)"><circle r="13"/><path d="M0-15 C-55-65-90-5-28 12 C-75 48-20 68 0 25 C20 68 75 48 28 12 C90-5 55-65 0-15Z"/></g>
+          <g class="bloom bloom-three" transform="translate(790 55)"><circle r="16"/><path d="M0-18 C-65-75-105-8-32 14 C-90 55-28 78 0 30 C28 78 90 55 32 14 C105-8 65-75 0-18Z"/></g>
+          <g class="bloom bloom-four" transform="translate(1080 70)"><circle r="14"/><path d="M0-16 C-58-70-92-7-29 13 C-80 50-24 72 0 27 C24 72 80 50 29 13 C92-7 58-70 0-16Z"/></g>
+        </svg>
+      </div>
+    </section>
 
     <section id="bouquet" class="section-shell bouquet-section">
       <div class="section-heading reveal">
@@ -207,6 +225,8 @@
       <p class="handwritten">Until then, consider this a little digital flower bouquet. ♡</p>
     </article>
   </div>
+
+  <div id="unlockModal" class="modal" aria-hidden="true"><div class="modal-backdrop" data-close="unlock"></div><article class="modal-paper lock-paper"><button class="modal-close" data-close="unlock" aria-label="Close">×</button><div class="lock-icon" id="lockIcon">🔒</div><p class="eyebrow">a tiny secret</p><h2>Unlock My Heart</h2><p>Some doors are worth opening slowly. Enter the little code that means something to you.</p><div class="lock-code" id="lockCode">♡ · ♡ · ♡</div><button class="primary-button" id="unlockHeart" type="button">unlock my heart ♡</button><p class="lock-status" id="lockStatus"></p></article></div>
 
   <div id="messageModal" class="modal" aria-hidden="true">
     <div class="modal-backdrop" data-close="message"></div>
