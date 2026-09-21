@@ -469,3 +469,43 @@ body.modal-open{overflow:hidden}
 .story-chapter{position:absolute!important;inset:0!important;height:100%!important;min-height:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;pointer-events:none!important}
 .story-card{opacity:0!important;pointer-events:none!important;will-change:transform,opacity!important;transition:opacity .14s linear,transform .18s cubic-bezier(.22,1,.36,1),box-shadow .25s ease!important}
 .story-chapter.is-active .story-card{pointer-events:auto!important}
+
+/* ===== replacement for failed scroll experiments ===== */
+.chapter-section{padding-top:90px;padding-bottom:90px}
+.chapter-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:36px}
+.chapter-card{position:relative;min-height:360px;padding:30px;border:1px solid var(--line);border-radius:30px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;box-shadow:0 18px 50px rgba(129,20,67,.07);transition:transform .35s cubic-bezier(.16,1,.3,1),box-shadow .35s ease}
+.chapter-card:before{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-55px;top:-55px;background:rgba(255,255,255,.55)}
+.chapter-card:hover{transform:translateY(-8px) rotate(-.35deg);box-shadow:0 28px 70px rgba(129,20,67,.13)}
+.chapter-card-pink{background:#fff1f7}.chapter-card-rose{background:#ffe8f1}.chapter-card-candy{background:#fff6fa}.chapter-card-soft{background:#fdf4f7}
+.chapter-index{position:absolute;left:28px;top:28px;font-size:10px;letter-spacing:.16em;color:var(--rose)}
+.chapter-symbol{position:absolute;right:26px;top:24px;font-size:34px;color:var(--rose)}
+.chapter-card h3{font-family:var(--serif);font-size:clamp(34px,3.1vw,50px);font-weight:500;letter-spacing:-.035em;line-height:.98;margin:8px 0 14px}
+.chapter-card h3 em{color:var(--rose)}
+.chapter-card>p:last-child{color:var(--muted);line-height:1.75;margin:0}
+.garden-section{position:relative!important;min-height:0!important;overflow:visible!important;padding-top:80px;padding-bottom:90px}
+.garden-heading{max-width:650px;position:relative;z-index:2}
+.garden-canvas{height:420px!important;margin-top:30px;border-radius:38px!important;overflow:hidden!important;background:rgba(255,255,255,.72)!important;border:1px solid var(--line)!important;backdrop-filter:none!important}
+.garden-svg{width:100%;height:100%;display:block}
+.garden-stem,.bloom path{fill:none;stroke:var(--rose);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.bloom circle{fill:#f6b84c;stroke:none}
+.bloom{transform-box:fill-box;transform-origin:center;animation:gardenFloat 4.5s ease-in-out infinite}
+.bloom:nth-of-type(2){animation-delay:.45s}.bloom:nth-of-type(3){animation-delay:.9s}.bloom:nth-of-type(4){animation-delay:1.35s}
+@keyframes gardenFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+/* proper scattered table for all 90 photos */
+.memory-archive{padding-top:90px;padding-bottom:100px}
+.memory-table{position:relative;width:min(1120px,92vw);height:1400px;margin:38px auto 0;overflow:visible}
+.story-photo{position:absolute!important;left:var(--photo-x)!important;top:var(--photo-y)!important;width:clamp(125px,13.5vw,180px)!important;aspect-ratio:4/5!important;padding:8px!important;background:#fff!important;border:1px solid rgba(164,19,79,.14)!important;border-radius:16px!important;box-shadow:0 18px 44px rgba(67,21,43,.13)!important;opacity:1!important;filter:none!important;pointer-events:auto!important;cursor:pointer!important;transform:translate(-50%,-50%) rotate(var(--rotation)) scale(var(--base-scale))!important;transition:transform .22s cubic-bezier(.16,1,.3,1),box-shadow .22s ease!important}
+.story-photo:hover{transform:translate(-50%,-50%) rotate(var(--rotation)) scale(calc(var(--base-scale) + .08))!important;box-shadow:0 28px 60px rgba(67,21,43,.2)!important;z-index:500!important}
+.story-photo img{display:block!important;width:100%!important;height:100%!important;object-fit:cover!important;border-radius:10px!important;filter:none!important}
+.story-photo figcaption{position:absolute;left:8px!important;bottom:8px!important;padding:4px 7px!important;border-radius:999px!important;background:rgba(255,255,255,.82)!important;font-size:7px!important;color:var(--amaranth)!important}
+.story-photo.is-missing:after{font-size:13px!important}
+@media(max-width:900px){.chapter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .memory-table{height:1700px;width:94vw}
+  .story-photo{width:clamp(92px,19vw,132px)!important}
+}
+@media(max-width:560px){.chapter-grid{grid-template-columns:1fr}.chapter-card{min-height:280px}
+  .garden-canvas{height:310px!important}
+  .memory-table{height:2300px;width:94vw}
+  .story-photo{width:clamp(72px,20vw,102px)!important}
+}
