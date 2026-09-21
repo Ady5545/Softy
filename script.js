@@ -227,88 +227,12 @@ function pageProgress(element){
   return clamp((window.scrollY-absoluteTop)/travel);
 }
 
-function updateVisualStory(){
-  const section=document.getElementById('visualStory');
-  if(!section) return;
-  const stage=section.querySelector('.story-stage');
-  const visual=section.querySelector('.story-visual');
-  const flower=section.querySelector('.story-flower');
-  const orbitOne=section.querySelector('.orbit-one');
-  const orbitTwo=section.querySelector('.orbit-two');
-  const chapters=qsa('.story-chapter',section);
-  const rect=section.getBoundingClientRect();
-  const travel=Math.max(1,section.offsetHeight-window.innerHeight);
-  const p=clamp((-rect.top)/travel);
-  const inside=rect.top<=0 && rect.bottom>=window.innerHeight;
-
-  if(stage){
-    stage.classList.toggle('is-fixed',inside);
-    stage.classList.toggle('is-after',rect.bottom<window.innerHeight);
-    if(rect.bottom<window.innerHeight){
-      stage.style.top=travel+'px';
-    }else if(rect.top>0){
-      stage.style.top='0px';
-    }else{
-      stage.style.top='0px';
-    }
-  }
-  if(flower){
-    const scale=.86+p*.22;
-    const rotate=-5+p*14;
-    flower.style.transform='translate(-50%,-50%) scale('+scale.toFixed(3)+') rotate('+rotate.toFixed(2)+'deg)';
-    flower.style.opacity=String(.72+p*.28);
-  }
-  if(orbitOne) orbitOne.style.transform='translate(-50%,-50%) rotate('+(p*110).toFixed(2)+'deg) scale('+(1+p*.05).toFixed(3)+')';
-  if(orbitTwo) orbitTwo.style.transform='translate(-50%,-50%) rotate('+(-p*75).toFixed(2)+'deg) scale('+(1-p*.03).toFixed(3)+')';
-  if(visual) visual.style.background='radial-gradient(circle at 50% 46%,#fff 0,#fff7fa 55%,var(--cream) 100%)';
-
-  const phase=p*Math.max(0,chapters.length-1);
-  chapters.forEach((chapter,i)=>{
-    const dist=Math.abs(i-phase);
-    const fade=clamp(1-dist/.82);
-    const active=dist<.48;
-    const card=chapter.querySelector('.story-card');
-    if(card){
-      const dir=i%2===0?-1:1;
-      const x=(1-fade)*dir*70;
-      const y=(1-fade)*28;
-      const scale=.96+fade*.04;
-      card.style.opacity=String(fade);
-      card.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0) scale('+scale.toFixed(3)+')';
-      card.style.pointerEvents=active?'auto':'none';
-    }
-    chapter.classList.toggle('is-active',active);
-  });
-}
-function updateGardenStory(){
-  const section=document.getElementById('garden');
-  if(!section) return;
-  const p=pageProgress(section);
-  const stems=qsa('.garden-stem',section);
-  const blooms=qsa('.bloom',section);
-  stems.forEach((stem,i)=>{
-    const start=i*.16;
-    const progress=clamp((p-start)/.34);
-    stem.style.strokeDasharray='1';
-    stem.style.strokeDashoffset=String(1-progress);
-    stem.style.opacity=String(.18+progress*.82);
-  });
-  blooms.forEach((bloom,i)=>{
-    const start=.18+i*.17;
-    const progress=clamp((p-start)/.24);
-    bloom.style.opacity=String(.08+progress*.92);
-    bloom.style.transform='scale('+(0.72+progress*.28).toFixed(3)+')';
-  });
-}
-
 function updateGlobalScroll(){
   const y=window.scrollY||window.pageYOffset||0;
   const max=Math.max(1,document.documentElement.scrollHeight-window.innerHeight);
   if(progressBar) progressBar.style.width=(y/max*100)+'%';
   const topbar=document.querySelector('.topbar');
   if(topbar) topbar.classList.toggle('scrolled',y>80);
-  updateVisualStory();
-  updateGardenStory();
   updateMemoryStory();
 }
 let scrollTick=false;
