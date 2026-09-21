@@ -904,3 +904,8 @@ body.modal-open{overflow:hidden}
   #garden.garden-section{min-height:175vh!important}
   #garden .garden-canvas{top:132px!important;height:310px!important;margin-top:12vh!important}
 }
+
+/* story cards: readable before they become active */
+.softy-story-card{opacity:var(--story-opacity,0.72)!important}
+.softy-story-card.is-active{opacity:1!important}
+.garden-flower-pop{transform:scale(1.18)!important}
