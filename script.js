@@ -484,6 +484,7 @@ function shuffle(items){
   return arr;
 }
 const queue=shuffle(playlist);
+let sourceIndex=0;
 const audio=document.getElementById('softyAudio') || document.createElement('audio');
 audio.preload='auto';
 audio.autoplay=false;
