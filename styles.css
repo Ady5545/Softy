@@ -368,3 +368,73 @@ body.modal-open{overflow:hidden}
   .garden-canvas{height:48vh!important}
   .story-photo{width:clamp(78px,24vw,118px)!important}
 }
+
+/* === final interaction repair === */
+.modal-backdrop{border:0;padding:0;width:100%;height:100%;cursor:default;z-index:0}
+.modal-paper{z-index:2}
+.modal-close{z-index:4;cursor:pointer;pointer-events:auto}
+#unlockModal{z-index:600}
+#unlockModal .modal-backdrop{pointer-events:auto}
+#unlockModal .lock-paper{position:relative}
+#unlockButton{position:relative;z-index:3}
+
+/* Photo archive is intentionally NOT scrollytelling anymore. */
+.memory-scrollytelling{height:auto!important;min-height:0!important;position:relative!important;overflow:visible!important;padding:120px 0 80px}
+.memory-story-sticky{position:relative!important;top:auto!important;height:auto!important;min-height:900px!important;overflow:visible!important;display:block!important;background:transparent!important}
+.memory-story-sticky:before{display:none!important}
+.memory-story-title{position:relative;z-index:2;width:min(680px,88vw);margin:0 auto 18px;text-align:center}
+.memory-story-title h2{font-size:clamp(42px,7vw,82px);margin:8px 0 14px}
+.memory-story-title>p:last-child{color:var(--muted);line-height:1.7}
+.memory-scene{position:relative!important;inset:auto!important;width:min(1100px,92vw);height:760px!important;margin:30px auto 0;z-index:3!important;contain:none!important;pointer-events:auto!important}
+.story-photo{position:absolute!important;left:var(--photo-x,50%)!important;top:var(--photo-y,50%)!important;width:clamp(120px,14vw,205px)!important;aspect-ratio:4/5!important;margin:0!important;padding:8px!important;opacity:1!important;filter:none!important;transform:translate(-50%,-50%) rotate(var(--rotation)) scale(var(--base-scale))!important;pointer-events:auto!important;cursor:pointer!important;background:#fff!important;border:1px solid rgba(164,19,79,.12)!important;box-shadow:0 20px 45px rgba(67,21,43,.12)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;transition:transform .22s cubic-bezier(.16,1,.3,1),box-shadow .22s ease!important}
+.story-photo:hover{transform:translate(-50%,-50%) rotate(var(--rotation)) scale(calc(var(--base-scale) + .08))!important;z-index:500!important;box-shadow:0 30px 65px rgba(67,21,43,.2)!important}
+.story-photo.is-active{box-shadow:0 30px 70px rgba(67,21,43,.2)!important}
+.story-photo img{width:100%!important;height:100%!important;object-fit:cover!important;opacity:1!important;filter:none!important;border-radius:11px!important}
+.story-photo figcaption{display:block!important;z-index:2}
+.story-photo.is-missing{display:grid!important;place-items:center}
+.story-photo.is-missing img{display:none!important}
+
+/* Full-photo view: centered white card, no clipping. */
+.photo-modal{z-index:800!important}
+.photo-modal-figure{width:min(88vw,900px)!important;max-width:none!important;max-height:90vh!important;padding:14px 14px 18px!important;border-radius:20px!important;background:#fff!important;box-shadow:0 35px 100px rgba(50,0,25,.35)!important}
+.photo-modal-figure img{display:block!important;max-width:84vw!important;max-height:78vh!important;width:auto!important;height:auto!important;object-fit:contain!important;background:#fff!important;border-radius:12px!important;box-shadow:none!important}
+.photo-modal-close{z-index:810!important;cursor:pointer!important;pointer-events:auto!important}
+.photo-modal-nav{z-index:810!important;cursor:pointer!important;pointer-events:auto!important}
+
+/* Bottom-right vinyl music player. */
+.music-player{position:fixed!important;right:22px!important;bottom:22px!important;z-index:900!important}
+.player-toggle.vinyl-record{position:relative!important;width:72px!important;height:72px!important;padding:0!important;border-radius:50%!important;border:1px solid rgba(45,7,28,.28)!important;background:
+  radial-gradient(circle at 50% 50%,#f7bfd6 0 10px,#d81b60 11px 15px,#111 16px 17px,#1a1a1a 18px 100%)!important;
+  box-shadow:0 14px 35px rgba(45,7,28,.2)!important;overflow:hidden!important;transform:none!important}
+.player-toggle.vinyl-record:before,.player-toggle.vinyl-record:after{content:"";position:absolute;inset:7px;border-radius:50%;border:1px solid rgba(255,255,255,.09);pointer-events:none}
+.player-toggle.vinyl-record:after{inset:13px;border-color:rgba(255,255,255,.07)}
+.vinyl-grooves{position:absolute;inset:3px;border-radius:50%;background:repeating-radial-gradient(circle at center,transparent 0 4px,rgba(255,255,255,.06) 4px 5px);pointer-events:none}
+.vinyl-label{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:25px;height:25px;border-radius:50%;background:#f58bb6;color:#fff;display:grid;place-items:center;font-size:11px;z-index:3}
+.vinyl-hole{position:absolute;left:50%;top:50%;width:5px;height:5px;transform:translate(-50%,-50%);border-radius:50%;background:#fff;z-index:4;opacity:.85}
+.music-player.playing .vinyl-grooves{animation:vinylSpin 3.2s linear infinite}
+@keyframes vinylSpin{to{transform:rotate(360deg)}}
+.player-toggle.vinyl-record:hover{transform:translateY(-3px)!important;box-shadow:0 20px 42px rgba(45,7,28,.24)!important}
+.player-panel{right:0!important;bottom:86px!important;width:min(340px,calc(100vw - 30px))!important;border-radius:24px!important}
+.player-art{height:88px!important;width:88px!important;border-radius:50%!important;overflow:hidden!important;margin:8px auto 16px!important;background:
+  radial-gradient(circle at 50% 50%,#f7bfd6 0 13px,#d81b60 14px 20px,#111 21px 100%)!important;position:relative!important}
+.player-art:before{content:"";position:absolute;inset:4px;border-radius:50%;background:repeating-radial-gradient(circle at center,transparent 0 4px,rgba(255,255,255,.06) 4px 5px)}
+.player-art span{position:relative;z-index:2;color:#fff!important;font-size:20px!important}
+.music-player.open .player-toggle.vinyl-record{box-shadow:0 20px 50px rgba(45,7,28,.28)!important}
+.music-player.open .player-panel{opacity:1!important;pointer-events:auto!important;transform:none!important}
+.music-player .player-close{cursor:pointer!important}
+.music-player button{pointer-events:auto!important}
+
+/* first Apple-style story: hard-pin the scene and make the active card the only interactive layer */
+.story-stage{position:sticky!important;top:0!important;height:100vh!important;width:100%!important;overflow:hidden!important}
+.scroll-story{height:400vh!important;min-height:400vh!important;overflow:clip!important}
+.story-visual{position:absolute!important;inset:0!important;height:100%!important}
+.story-chapters{position:absolute!important;inset:0!important;height:100%!important}
+.story-chapter{pointer-events:none!important}
+.story-card{opacity:0;pointer-events:none!important}
+.story-chapter.is-active .story-card{opacity:1!important;pointer-events:auto!important}
+@media(max-width:800px){
+  .memory-scene{height:820px!important}
+  .story-photo{width:clamp(92px,22vw,145px)!important}
+  .music-player{right:16px!important;bottom:16px!important}
+  .player-toggle.vinyl-record{width:64px!important;height:64px!important}
+}
