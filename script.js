@@ -482,259 +482,6 @@ function shuffle(items){
   }
   return arr;
 }
-const queue=shuffle(playlist);
-let sourceIndex=0;
-const audio=document.getElementById('softyAudio') || document.createElement('audio');
-audio.preload='auto';
-audio.autoplay=false;
-audio.playsInline=true;
-audio.setAttribute('aria-hidden','true');
-if(!audio.isConnected) document.body.appendChild(audio);
-let trackIndex=0;
-let musicProblem=false;
-let soundUnlocked=false;
-let mutedAutoplayFallback=false;
-const trackTitle=document.getElementById('trackTitle');
-const trackArtist=document.getElementById('trackArtist');
-const playButton=document.getElementById('playTrack');
-const playerProgress=document.getElementById('playerProgress');
-const currentTime=document.getElementById('currentTime');
-const duration=document.getElementById('duration');
-const playerProgressBar=document.querySelector('.player-progress');
-
-function fmt(t){ return Number.isFinite(t)?Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'):'0:00'; }
-
-function sourceCandidates(file){
-  const encoded=encodeURIComponent(file);
-  return [
-    'https://vpl0zcyuaj7poz7d.public.blob.vercel-storage.com/'+encoded,
-    'https://media.githubusercontent.com/media/Ady5545/Softy/main/assets/music/'+encoded,
-    'https://raw.githubusercontent.com/Ady5545/Softy/main/assets/music/'+encoded
-  ];
-}
-
-function setTrackSource(file){
-  const sources=sourceCandidates(file);
-  sourceIndex=Math.min(sourceIndex,sources.length-1);
-  audio.src=sources[sourceIndex];
-  audio.load();
-}
-
-function loadTrack(index,autoplay=false){
-  trackIndex=(index+queue.length)%queue.length;
-  const [title,file]=queue[trackIndex];
-  musicProblem=false;
-  sourceIndex=0;
-  if(trackTitle) trackTitle.textContent=title || 'Music corner';
-  if(trackArtist) trackArtist.textContent='shuffle · '+String(trackIndex+1)+' / '+String(queue.length);
-  audio.muted=false;
-  setTrackSource(file);
-  if(playerProgress) playerProgress.style.width='0%';
-  if(currentTime) currentTime.textContent='0:00';
-  if(duration) duration.textContent='0:00';
-  if(playButton) playButton.textContent='▶';
-  if(autoplay) playCurrentTrack();
-}
-
-async function playCurrentTrack(){
-  try{
-    audio.muted=false;
-    await audio.play();
-    musicProblem=false;
-    if(playButton) playButton.textContent='Ⅱ';
-    if(trackArtist) trackArtist.textContent='shuffle · '+String(trackIndex+1)+' / '+String(queue.length);
-  }catch(error){
-    if(sourceIndex < sourceCandidates(queue[trackIndex][1]).length-1){
-      sourceIndex += 1;
-      setTrackSource(queue[trackIndex][1]);
-      try{
-        await audio.play();
-        musicProblem=false;
-        if(playButton) playButton.textContent='Ⅱ';
-        return;
-      }catch(secondError){}
-    }
-    musicProblem=true;
-    if(playButton) playButton.textContent='▶';
-    if(trackArtist) trackArtist.textContent='tap play again · music source unavailable';
-    console.warn('Softy audio playback failed',error);
-  }
-}
-
-loadTrack(0,false);
-
-if(playButton) playButton.addEventListener('click',async()=>{
-  if(audio.paused){
-    await playCurrentTrack();
-  }else{
-    audio.pause();
-  }
-});
-
-const prevTrack=document.getElementById('prevTrack');
-const nextTrack=document.getElementById('nextTrack');
-if(prevTrack) prevTrack.addEventListener('click',async()=>{ loadTrack(trackIndex-1,false); await playCurrentTrack(); });
-if(nextTrack) nextTrack.addEventListener('click',async()=>{ loadTrack(trackIndex+1,false); await playCurrentTrack(); });
-audio.addEventListener('loadedmetadata',()=>{if(duration) duration.textContent=fmt(audio.duration)});
-audio.addEventListener('timeupdate',()=>{
-  const pct=audio.duration?audio.currentTime/audio.duration*100:0;
-  if(playerProgress) playerProgress.style.width=pct+'%';
-  if(currentTime) currentTime.textContent=fmt(audio.currentTime);
-  if(duration) duration.textContent=fmt(audio.duration);
-});
-audio.addEventListener('play',()=>{if(playButton) playButton.textContent='Ⅱ'});
-audio.addEventListener('pause',()=>{if(playButton) playButton.textContent='▶'});
-audio.addEventListener('error',()=>{
-  const sources=sourceCandidates(queue[trackIndex]?.[1] || '');
-  if(sourceIndex < sources.length-1){
-    sourceIndex += 1;
-    setTrackSource(queue[trackIndex][1]);
-    if(!audio.paused) audio.play().catch(()=>{});
-    return;
-  }
-  musicProblem=true;
-  if(playButton) playButton.textContent='▶';
-  if(trackArtist) trackArtist.textContent='tap play again · music source unavailable';
-});
-if(playerProgressBar) playerProgressBar.addEventListener('click',e=>{
-  if(!Number.isFinite(audio.duration)) return;
-  const r=e.currentTarget.getBoundingClientRect();
-  audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration;
-});
-const musicPlayer=document.getElementById('musicPlayer');
-const playerToggle=document.getElementById('playerToggle');
-const playerClose=document.getElementById('playerClose');
-if(musicPlayer){
-  musicPlayer.addEventListener('toggle',()=>{
-    const open=musicPlayer.open;
-    if(playerToggle) playerToggle.setAttribute('aria-expanded',open?'true':'false');
-  });
-}
-if(playerClose) playerClose.addEventListener('click',event=>{
-  event.preventDefault();
-  if(musicPlayer) musicPlayer.open=false;
-});
-audio.addEventListener('play',()=>{musicPlayer?.classList.add('playing');});
-audio.addEventListener('pause',()=>{musicPlayer?.classList.remove('playing');});
-audio.addEventListener('ended',()=>{musicPlayer?.classList.remove('playing');loadTrack(trackIndex+1,true);});
-
-document.addEventListener('keydown',e=>{
-  if(e.key==='ArrowLeft'&&photoModal?.classList.contains('open')) stepPhoto(-1);
-  if(e.key==='ArrowRight'&&photoModal?.classList.contains('open')) stepPhoto(1);
-});
-
-window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
-
-
-
-/* ================= GARDEN SCROLL STORY =================
-   The garden blooms progressively as its section is scrolled.
-   This is intentionally isolated from the memory/photo and music systems.
-================================================================ */
-(function gardenScrollStory(){
-  const section=document.getElementById('garden');
-  const canvas=document.getElementById('gardenCanvas');
-  if(!section || !canvas) return;
-
-  const stems=Array.from(canvas.querySelectorAll('.garden-stem'));
-  const blooms=Array.from(canvas.querySelectorAll('.bloom'));
-  if(!stems.length || !blooms.length) return;
-
-  stems.forEach(stem=>{
-    try{
-      const length=stem.getTotalLength();
-      stem.style.strokeDasharray=String(length);
-      stem.style.strokeDashoffset=String(length);
-    }catch(_){
-      stem.style.strokeDasharray='900';
-      stem.style.strokeDashoffset='900';
-    }
-  });
-
-  blooms.forEach(bloom=>{
-    bloom.style.opacity='0';
-    bloom.style.transform='translate(var(--bx), var(--by)) scale(.08)';
-    bloom.style.transformOrigin='center';
-    bloom.style.transformBox='fill-box';
-  });
-
-  function gardenProgress(){
-    const rect=section.getBoundingClientRect();
-    const travel=Math.max(1,rect.height-window.innerHeight);
-    return clamp((window.innerHeight*0.58-rect.top)/travel);
-  }
-
-  const clickedBlooms=new Set();
-
-  function updateGardenStory(){
-    const p=gardenProgress();
-
-    stems.forEach((stem,index)=>{
-      const local=clamp((p-(index*0.16))/0.28);
-      try{
-        const length=stem.getTotalLength();
-        stem.style.strokeDashoffset=String(length*(1-local));
-      }catch(_){}
-      stem.style.opacity=local>0 ? '1' : '.35';
-    });
-
-    blooms.forEach((bloom,index)=>{
-      if(clickedBlooms.has(index)){
-        bloom.style.opacity='1';
-        bloom.style.transformOrigin='center';
-        bloom.style.transform='scale(1)';
-        return;
-      }
-      const start=0.18+(index*0.18);
-      const local=clamp((p-start)/0.16);
-      const eased=local*local*(3-2*local);
-      bloom.style.opacity=String(eased);
-      bloom.style.transformOrigin='center';
-      bloom.style.transform='scale('+String(0.08+(eased*.92))+')';
-    });
-
-    section.classList.toggle('garden-blooming',p>0.04);
-    section.classList.toggle('garden-finished',p>0.9);
-  }
-
-  let raf=0;
-  const schedule=()=>{
-    if(raf) return;
-    raf=requestAnimationFrame(()=>{raf=0;updateGardenStory();});
-  };
-
-  window.addEventListener('scroll',schedule,{passive:true});
-  window.addEventListener('resize',schedule,{passive:true});
-  schedule();
-
-  blooms.forEach((bloom,index)=>{
-    bloom.style.cursor='pointer';
-    bloom.setAttribute('tabindex','0');
-    bloom.setAttribute('role','button');
-    const activate=()=>{
-      clickedBlooms.add(index);
-      bloom.style.opacity='1';
-      bloom.style.transform='scale(1)';
-      bloom.classList.remove('garden-flower-pop');
-      void bloom.offsetWidth;
-      bloom.classList.add('garden-flower-pop');
-      const flowerNames=['a little hello ♡','just because ♡','for your happy days ♡','one more for you ♡'];
-      const existing=document.getElementById('gardenFlowerMessage');
-      if(existing) existing.remove();
-      const note=document.createElement('div');
-      note.id='gardenFlowerMessage';
-      note.className='garden-flower-message';
-      note.textContent=flowerNames[index]||'just for you ♡';
-      section.appendChild(note);
-      window.setTimeout(()=>note.remove(),1800);
-    };
-    bloom.addEventListener('click',activate);
-    bloom.addEventListener('keydown',e=>{
-      if(e.key==='Enter'||e.key===' '){e.preventDefault();activate();}
-    });
-  });
-})();
-
 /* ================= SOFTY FINAL INTERACTION REPAIR =================
    This pass intentionally overrides the earlier experimental scroll/photo/music
    implementations instead of stacking another dependency on top of them.
@@ -1026,8 +773,20 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
   audio.setAttribute('aria-label','Softy music');
   document.body.appendChild(audio);
 
-  const defaultTrack=['Until I Found You — Solo','stephen-sanchez-until-i-found-you-official-video-256kbps.webm'];
-  const tracks=[defaultTrack,...shuffle(playlist.filter(track=>track[1]!==defaultTrack[1]))];
+  const defaultTrack='stephen-sanchez-until-i-found-you-official-video-256kbps.webm';
+  const tracks=[defaultTrack,...shuffle(playlist.filter(track=>track[1]!==defaultTrack).map(track=>track[1]))];
+
+  function formatTrackName(file){
+    return file
+      .replace(/\.(mp3|webm|mp4|m4a)$/i,'')
+      .replace(/[-_]+/g,' ')
+      .replace(/\b\d{2,3}\s*kbps\b/gi,'')
+      .replace(/\b(?:official\s+audio|official\s+video|music\s+video|lyric\s+video|lyrical\s+video|visualizer)\b/gi,'')
+      .replace(/\b(?:official|lyrics?|lyrical|audio|video)\b/gi,'')
+      .replace(/\s{2,}/g,' ')
+      .trim()
+      .replace(/\b\w/g,ch=>ch.toUpperCase());
+  }
   let ti=0;
   let sourceIndex=0;
 
@@ -1047,13 +806,13 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
   }
 
   function setSource(){
-    const list=sources(tracks[ti][1]);
+    const list=sources(tracks[ti]);
     audio.src=list[sourceIndex];
     audio.load();
   }
 
   function updateTrackUi(){
-    title.textContent=tracks[ti][0];
+    title.textContent=formatTrackName(tracks[ti]);
     artist.textContent='music corner · '+(ti+1)+' / '+tracks.length;
     if(bar)bar.style.width='0%';
     if(now)now.textContent='0:00';
