@@ -804,3 +804,337 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
     });
   }
 })();
+
+
+
+/* ================= SOFTY DEPLOYED FINAL FIX ================= */
+(function softyDeployedFinalFix(){
+  'use strict';
+
+  const $ = (s, root=document) => root.querySelector(s);
+  const $$ = (s, root=document) => Array.from(root.querySelectorAll(s));
+
+  /* ============================================================
+     1. REAL PHOTO SCATTER
+      90 photos are deliberately spread across the entire canvas.
+     No rows, no columns, no grid, no scroll choreography.
+     ============================================================ */
+  const scene = $('#memoryScene');
+  const table = scene?.closest('.memory-table');
+
+  function random01(seed){
+    const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453123;
+    return x - Math.floor(x);
+  }
+
+  function scatterAllPhotos(){
+    if(!scene) return;
+    const cards = $$('.story-photo', scene);
+    if(!cards.length) return;
+
+    const mobile = window.innerWidth <= 560;
+    const tablet = window.innerWidth > 560 && window.innerWidth <= 900;
+
+    const tableHeight = mobile ? 2800 : tablet ? 2300 : 1900;
+    const cardWidth = mobile ? 86 : tablet ? 112 : 155;
+
+    if(table){
+      table.style.setProperty('height', tableHeight + 'px', 'important');
+      table.style.setProperty('min-height', tableHeight + 'px', 'important');
+    }
+    scene.style.setProperty('height', tableHeight + 'px', 'important');
+
+    cards.forEach((card, i) => {
+      /*
+       * Deliberately independent X/Y positions.
+       * The points are not generated from rows or columns.
+       */
+      const x = 3 + random01(i + 11) * 94;
+      const y = 3 + random01(i + 97) * 94;
+      const rotation = -24 + random01(i + 211) * 48;
+      const scale = mobile
+        ? 0.72 + random01(i + 311) * 0.30
+        : 0.72 + random01(i + 311) * 0.42;
+      const z = 10 + Math.floor(random01(i + 701) * 850);
+
+      card.style.setProperty('--photo-x', x.toFixed(2) + '%');
+      card.style.setProperty('--photo-y', y.toFixed(2) + '%');
+      card.style.setProperty('--rotation', rotation.toFixed(2) + 'deg');
+      card.style.setProperty('--base-scale', scale.toFixed(3));
+      card.style.setProperty('position', 'absolute', 'important');
+      card.style.setProperty('left', x.toFixed(2) + '%', 'important');
+      card.style.setProperty('top', y.toFixed(2) + '%', 'important');
+      card.style.setProperty('width', cardWidth + 'px', 'important');
+      card.style.setProperty('height', Math.round(cardWidth * 1.25) + 'px', 'important');
+      card.style.setProperty('opacity', '1', 'important');
+      card.style.setProperty('visibility', 'visible', 'important');
+      card.style.setProperty('display', 'block', 'important');
+      card.style.setProperty('pointer-events', 'auto', 'important');
+      card.style.setProperty('transform',
+        'translate(-50%,-50%) rotate(' + rotation.toFixed(2) + 'deg) scale(' + scale.toFixed(3) + ')',
+        'important'
+      );
+      card.style.setProperty('z-index', String(z), 'important');
+      card.classList.add('softy-photo-ready');
+    });
+  }
+
+  scatterAllPhotos();
+  window.addEventListener('resize', scatterAllPhotos, {passive:true});
+
+  /* ============================================================
+     2. EXACT PHOTO LIGHTBOX
+     Always uses the actual clicked image URL.
+     ============================================================ */
+  const modal = $('#photoModal');
+  const modalImage = $('#photoModalImage');
+  const modalCaption = $('#photoModalCaption');
+  let photoIndex = 0;
+
+  function showExactPhoto(index){
+    const cards = $$('.story-photo', scene || document);
+    if(!modal || !modalImage || !cards.length) return;
+
+    photoIndex = (Number(index) + cards.length) % cards.length;
+    const card = cards[photoIndex];
+    const image = $('img', card);
+    const source = image?.currentSrc || image?.src || ('/assets/photos/photo-' + String(photoIndex + 1).padStart(3,'0') + '.jpg');
+
+    modalImage.src = source;
+    modalImage.alt = 'Memory ' + String(photoIndex + 1);
+    if(modalCaption){
+      modalCaption.textContent =
+        'memory ' + String(photoIndex + 1).padStart(2,'0') +
+        ' / ' + String(cards.length).padStart(2,'0');
+    }
+
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    document.body.classList.add('modal-open');
+  }
+
+  function closeExactPhoto(){
+    if(!modal) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    if(!$$('.modal.open,.photo-modal.open').length){
+      document.body.classList.remove('modal-open');
+    }
+  }
+
+  window.openPhotoModal = showExactPhoto;
+  window.closePhotoModal = closeExactPhoto;
+
+  $$('.story-photo', scene || document).forEach(card=>{
+    card.addEventListener('click', event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      showExactPhoto(Number(card.dataset.index || 0));
+    }, true);
+  });
+
+  const modalClose = $('#photoModalClose');
+  const modalPrev = $('#photoModalPrev');
+  const modalNext = $('#photoModalNext');
+  if(modalClose) modalClose.addEventListener('click', event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    closeExactPhoto();
+  }, true);
+  if(modalPrev) modalPrev.addEventListener('click', event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    showExactPhoto(photoIndex - 1);
+  }, true);
+  if(modalNext) modalNext.addEventListener('click', event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    showExactPhoto(photoIndex + 1);
+  }, true);
+
+  /* ============================================================
+     3. COMPLETELY REBUILD THE MUSIC PLAYER
+     Do not reuse the old blob audio element or old handlers.
+     Use only the MP3 files that are actually in assets/music/.
+     ============================================================ */
+  const player = $('#musicPlayer');
+  const toggle = $('#playerToggle');
+  const close = $('#playerClose');
+  const playButton = $('#playTrack');
+  const previous = $('#prevTrack');
+  const next = $('#nextTrack');
+  const title = $('#trackTitle');
+  const artist = $('#trackArtist');
+  const progress = $('#playerProgress');
+  const currentTime = $('#currentTime');
+  const duration = $('#duration');
+  const progressTrack = $('.player-progress');
+
+  /* Remove every audio element created by the old implementations. */
+  $$('audio').forEach(el => el.remove());
+
+  const audio = document.createElement('audio');
+  audio.preload = 'metadata';
+  audio.playsInline = true;
+  audio.setAttribute('aria-hidden','true');
+  document.body.appendChild(audio);
+
+  const tracks = [
+    ['Me Gustas Tu — Sped Up','manu-chao-me-gustas-tu-sped-up-version-official-audio-128kbps.mp3'],
+    ['No. 1 Party Anthem','arctic-monkeys-no-1-party-anthem-lyrics.mp3'],
+    ['Good Luck, Charm','ks-makhan-good-luck-charm-320-kbps.mp3'],
+    ['Just the Two of Us','grover-washington-jr-just-the-two-of-us-feat-bill-withers-256-kbps.mp3'],
+    ['We Fell in Love in October','girl-in-red-we-fell-in-love-in-october-lyrics.mp3'],
+    ['We Fell in Love in October — alternate','girl-in-red-we-fell-in-love-in-october-lyrics-1.mp3'],
+    ['Double Take','dhruv-double-take-lyrics.mp3'],
+    ['Jo Tum Mere Ho','anuv-jain-jo-tum-mere-ho-lyrics.mp3'],
+    ['Teenage Dream','stephen-dawes-teenage-dream-lyric-video.mp3'],
+    ['Make You Mine','public-make-you-mine-official-lyric-video.mp3'],
+    ['This Is What Autumn Feels Like','jvke-this-is-what-autumn-feels-like-official-lyric-video.mp3'],
+    ['Wildest Dreams','taylor-swift-wildest-dreams-lyrics.mp3'],
+    ['Lover — Shawn Mendes Version','taylor-swift-lover-remix-feat-shawn-mendes-lyric-video.mp3'],
+    ['Her','jvke-her-official-lyric-video.mp3'],
+    ['Next to You','jvke-next-to-you-official-lyric-video.mp3'],
+    ['O Rangrez','o-rangrez-lyrical-video-bhaag-milkha-bhaag-farhan-sonam-shreya-ghoshal-javed-bashir.mp3'],
+    ['My Love All Mine','mitski-my-love-mine-all-mine-official-lyric-video.mp3'],
+    ['Number 1 Girl','rose-number-one-girl-lyrics.mp3'],
+    ['Gosh She Looks Pretty','nato-kitch-gosh-she-looks-pretty-visualizer.mp3'],
+    ['Valleys','woah-valleys-lyrics.mp3'],
+    ['Eenie Meenie','sean-kingston-justin-bieber-eenie-meenie-lyrics.mp3'],
+    ['You Belong With Me','taylor-swift-you-belong-with-me-lyrics.mp3'],
+    ['Dooron Dooron','dooron-dooron-lyrics-paresh-pahuja-feat-harleen-sethi-shiv-tandan-meghdeep-bose-vaibhav-raj.mp3'],
+    ['Bairaiyya','bairiyaa-atif-aslam-shreya-ghoshal-lyrics-lyrical-bam-hindi.mp3'],
+    ['Rang Jo Lagyo','rang-jo-lagyo-lyrical-ramaiya-vastavaiya-girish-kumar-shruti-haasan-atif-aslam-shreya-ghoshal.mp3'],
+    ['Tere Bina','a-r-rahman-tere-bina-lyrical-song-aishwarya-rai-abhishek-bachchan-guru-gulzar.mp3'],
+    ['Thinking of You — AP Dhillon','thinking-of-you-official-audio-ap-dhillon.mp3'],
+    ['Laavan','laavan-music-video-jasmine-sandlas-mofusion-pro-media.mp3'],
+    ['Salvatore','lana-del-rey-salvatore-lyrics.mp3'],
+    ['Gehra Hua','gehra-hua-lyrics-arijit-singh-armaan-khan-dhurandhar.mp3']
+  ];
+
+  let trackIndex = 0;
+
+  function formatTime(value){
+    if(!Number.isFinite(value)) return '0:00';
+    return Math.floor(value/60) + ':' + String(Math.floor(value%60)).padStart(2,'0');
+  }
+
+  function setTrack(index, autoplay=false){
+    trackIndex = (index + tracks.length) % tracks.length;
+    const [trackName, file] = tracks[trackIndex];
+
+    audio.src = '/assets/music/' + encodeURIComponent(file);
+    audio.load();
+
+    if(title) title.textContent = trackName;
+    if(artist) artist.textContent = 'music corner · ' + (trackIndex + 1) + ' / ' + tracks.length;
+    if(progress) progress.style.width = '0%';
+    if(currentTime) currentTime.textContent = '0:00';
+    if(duration) duration.textContent = '0:00';
+    if(playButton) playButton.textContent = '▶';
+
+    if(autoplay){
+      audio.play().catch(()=>{
+        if(artist) artist.textContent = 'tap play to start the music ♡';
+      });
+    }
+  }
+
+  function togglePlayer(open){
+    if(!player) return;
+    player.classList.toggle('open', open);
+    if(toggle) toggle.setAttribute('aria-expanded', String(open));
+  }
+
+  if(toggle) toggle.onclick = event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    togglePlayer(!player.classList.contains('open'));
+  };
+
+  if(close) close.onclick = event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    togglePlayer(false);
+  };
+
+  if(playButton) playButton.onclick = async event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    if(audio.paused){
+      try{
+        await audio.play();
+      }catch{
+        if(artist) artist.textContent = 'tap play again if your browser blocked playback ♡';
+      }
+    }else{
+      audio.pause();
+    }
+  };
+
+  if(previous) previous.onclick = event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    setTrack(trackIndex - 1, true);
+  };
+
+  if(next) next.onclick = event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    setTrack(trackIndex + 1, true);
+  };
+
+  audio.addEventListener('loadedmetadata',()=>{
+    if(duration) duration.textContent = formatTime(audio.duration);
+  });
+
+  audio.addEventListener('timeupdate',()=>{
+    const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+    if(progress) progress.style.width = pct + '%';
+    if(currentTime) currentTime.textContent = formatTime(audio.currentTime);
+    if(duration) duration.textContent = formatTime(audio.duration);
+  });
+
+  audio.addEventListener('play',()=>{
+    player?.classList.add('playing');
+    if(playButton) playButton.textContent = 'Ⅱ';
+  });
+
+  audio.addEventListener('pause',()=>{
+    player?.classList.remove('playing');
+    if(playButton) playButton.textContent = '▶';
+  });
+
+  audio.addEventListener('ended',()=>{
+    setTrack(trackIndex + 1, true);
+  });
+
+  audio.addEventListener('error',()=>{
+    player?.classList.remove('playing');
+    if(playButton) playButton.textContent = '▶';
+    if(artist) artist.textContent = 'this MP3 could not be loaded · trying the next one ♡';
+    setTimeout(()=>setTrack(trackIndex + 1, false), 700);
+  });
+
+  if(progressTrack) progressTrack.onclick = event=>{
+    if(!Number.isFinite(audio.duration) || !audio.duration) return;
+    const rect = progressTrack.getBoundingClientRect();
+    audio.currentTime = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)) * audio.duration;
+  };
+
+  const note = $('.player-note');
+  if(note) note.textContent = tracks.length + ' MP3s live in your music corner · pick one and press play.';
+
+  /* No autoplay. The first user click is always allowed to start audio. */
+  setTrack(0, false);
+
+  /* Keyboard controls for the lightbox, without touching music. */
+  document.addEventListener('keydown', event=>{
+    if(modal?.classList.contains('open')){
+      if(event.key === 'Escape') closeExactPhoto();
+      if(event.key === 'ArrowLeft') showExactPhoto(photoIndex - 1);
+      if(event.key === 'ArrowRight') showExactPhoto(photoIndex + 1);
+    }
+  });
+})();
