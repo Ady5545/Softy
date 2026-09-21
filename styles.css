@@ -124,3 +124,16 @@ h1 em,h2 em{color:var(--rose);font-weight:500}
   .memory-placeholder.wide{grid-column:auto}
   .footer-card{padding:50px 28px}.big-heart{right:20px;font-size:100px}
 }
+.little-section{padding-top:55px}
+.little-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.little-card{min-height:245px;border:1px solid var(--line);border-radius:30px;background:#fff;text-align:left;padding:28px;display:flex;flex-direction:column;align-items:flex-start;box-shadow:0 12px 32px rgba(129,20,67,.05);color:var(--ink);transition:transform .22s,box-shadow .22s,border-color .22s;position:relative;overflow:hidden}
+.little-card:before{content:"";position:absolute;width:150px;height:150px;border-radius:50%;background:#ffe4ef;right:-55px;bottom:-70px;transition:transform .3s}
+.little-card:hover{transform:translateY(-4px);box-shadow:0 22px 45px rgba(129,20,67,.1);border-color:rgba(216,27,96,.22)}
+.little-card:hover:before{transform:scale(1.25)}
+.little-icon{font-size:27px;color:var(--rose);margin-bottom:26px;position:relative;z-index:1}
+.little-label{text-transform:uppercase;letter-spacing:.15em;font-size:10px;color:var(--rose);font-weight:600;position:relative;z-index:1}
+.little-card strong{font-family:var(--serif);font-size:25px;font-weight:500;line-height:1.12;margin-top:10px;max-width:270px;position:relative;z-index:1}
+.little-card small{color:var(--muted);margin-top:auto;position:relative;z-index:1}
+.wish-star{position:fixed;z-index:120;pointer-events:none;color:var(--hot);font-size:18px;animation:wishFloat 1.8s ease-out forwards}
+@keyframes wishFloat{0%{transform:translate(0,0) scale(.5) rotate(0);opacity:0}18%{opacity:1}100%{transform:translate(var(--dx),-120px) scale(1.3) rotate(180deg);opacity:0}}
+@media(max-width:800px){.little-grid{grid-template-columns:1fr}}
