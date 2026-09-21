@@ -1039,3 +1039,62 @@ function shuffle(items){
   });
 })();
 
+
+
+/* ================= NIGHT SKY MEMORY SECTION ================= */
+(function nightSkyMemories(){
+  const stage=document.getElementById('nightSkyStage');
+  const starsRoot=document.getElementById('nightSkyStars');
+  const note=document.getElementById('nightSkyNote');
+  const noteText=document.getElementById('nightSkyNoteText');
+  const close=document.getElementById('nightSkyNoteClose');
+  if(!stage||!starsRoot||!note||!noteText) return;
+
+  const memories=[
+    'Some of the nicest moments are the ones that looked completely ordinary at first.',
+    'There are little things I remember simply because they made the day feel softer.',
+    'Sometimes one song can turn into a whole memory by itself.',
+    'A tiny laugh can stay with you much longer than you expect.',
+    'Not every favourite moment needs a big story. Some are lovely just because they happened.',
+    'There are photos you keep for the picture — and photos you keep for everything around it.',
+    'Some days are made memorable by one very small thing.',
+    'It is funny how the smallest details can end up becoming the ones you keep.',
+    'A quiet moment can still deserve a place in the night sky.',
+    'Some memories feel brighter every time you come back to them.'
+  ];
+
+  const positions=[
+    [10,18],[18,34],[26,16],[33,46],[41,24],[49,14],[57,37],[64,20],
+    [72,31],[81,17],[88,43],[15,64],[25,78],[36,61],[46,83],[57,69],
+    [68,79],[78,62],[89,74],[94,54],[8,48],[21,53],[31,29],[54,54],
+    [63,12],[74,48],[85,27],[43,68],[58,88],[70,91]
+  ];
+
+  let activeStar=null;
+
+  positions.forEach((pos,index)=>{
+    const star=document.createElement('button');
+    star.type='button';
+    star.className='night-star';
+    star.style.left=pos[0]+'%';
+    star.style.top=pos[1]+'%';
+    star.style.setProperty('--star-scale',(0.7+((index*17)%60)/100).toFixed(2));
+    star.setAttribute('aria-label','Open night memory '+(index+1));
+    star.addEventListener('click',()=>{
+      activeStar?.classList.remove('is-picked');
+      activeStar=star;
+      star.classList.add('is-picked');
+      noteText.textContent=memories[index%memories.length];
+      note.classList.add('open');
+      note.setAttribute('aria-hidden','false');
+    });
+    starsRoot.appendChild(star);
+  });
+
+  close?.addEventListener('click',()=>{
+    note.classList.remove('open');
+    note.setAttribute('aria-hidden','true');
+    activeStar?.classList.remove('is-picked');
+    activeStar=null;
+  });
+})();
