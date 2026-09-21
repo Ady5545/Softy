@@ -8,7 +8,11 @@ const captions = [
   'okay, this one is ridiculously pretty'
 ];
 
-function makeFlower(x, y, scale, tilt, color, delay){
+function qs(selector, root=document){ return root.querySelector(selector); }
+function qsa(selector, root=document){ return [...root.querySelectorAll(selector)]; }
+function clamp(v,min=0,max=1){ return Math.min(max,Math.max(min,v)); }
+
+function makeFlower(x,y,scale,tilt,color,delay){
   const el=document.createElement('div');
   el.className='flower';
   el.style.left=x+'%';
@@ -21,16 +25,17 @@ function makeFlower(x, y, scale, tilt, color, delay){
   return el;
 }
 
-function bouquet(targetId, compact=false){
+function bouquet(targetId,compact=false){
   const target=document.getElementById(targetId);
+  if(!target) return;
   target.innerHTML='';
   const count=compact?5:9;
   const positions=Array.from({length:count},(_,i)=>({
-    x: compact ? 20+i*15 : 18+Math.random()*64,
-    y: compact ? 25+Math.random()*35 : 20+Math.random()*35,
-    scale: compact ? .58+Math.random()*.22 : .72+Math.random()*.45,
-    tilt: -18+Math.random()*36,
-    color: flowerColors[Math.floor(Math.random()*flowerColors.length)],
+    x:compact?20+i*15:18+Math.random()*64,
+    y:compact?25+Math.random()*35:20+Math.random()*35,
+    scale:compact?.58+Math.random()*.22:.72+Math.random()*.45,
+    tilt:-18+Math.random()*36,
+    color:flowerColors[Math.floor(Math.random()*flowerColors.length)],
     delay:(Math.random()*-4).toFixed(2)
   })).sort((a,b)=>a.y-b.y);
   positions.forEach(p=>target.appendChild(makeFlower(p.x,p.y,p.scale,p.tilt,p.color,p.delay)));
@@ -39,18 +44,14 @@ function bouquet(targetId, compact=false){
     wrap.className='wrapped';
     wrap.innerHTML='<div class="ribbon"></div>';
     target.appendChild(wrap);
-    document.getElementById('bouquetCaption').textContent=captions[Math.floor(Math.random()*captions.length)];
+    const caption=document.getElementById('bouquetCaption');
+    if(caption) caption.textContent=captions[Math.floor(Math.random()*captions.length)];
   }
 }
-
 bouquet('heroBouquet',true);
 bouquet('bouquetCanvas');
-
-document.getElementById('newBouquet').addEventListener('click',()=>bouquet('bouquetCanvas'));
-document.getElementById('surpriseBtn').addEventListener('click',()=>{
-  const messages=['you found the secret-ish button ♡','yes, I made the flowers random on purpose','this website is going to get much more ridiculous','you are officially allowed one tiny smile','there are definitely more surprises coming'];
-  showMessage(messages[Math.floor(Math.random()*messages.length)]);
-});
+const newBouquet=document.getElementById('newBouquet');
+if(newBouquet) newBouquet.addEventListener('click',()=>{ bouquet('bouquetCanvas'); bumpSurpriseCount(); });
 
 const jarMessages=[
   'I hope something unexpectedly nice happens to you today.',
@@ -61,44 +62,94 @@ const jarMessages=[
   'Somewhere on this website there is probably another thing I forgot to tell you.',
   'This is your official reminder that you deserve soft days too.'
 ];
+const surpriseMessages=[
+  'you found the secret-ish button ♡',
+  'yes, I made the flowers random on purpose',
+  'this website is going to get much more ridiculous',
+  'you are officially allowed one tiny smile',
+  'there are definitely more surprises coming'
+];
 
-function showMessage(text){
-  document.getElementById('modalMessage').textContent=text;
-  openModal('messageModal');
+function openModal(id){
+  const modal=document.getElementById(id);
+  if(!modal) return;
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden','false');
+  document.body.classList.add('modal-open');
 }
-document.getElementById('messageButton').addEventListener('click',()=>showMessage(jarMessages[Math.floor(Math.random()*jarMessages.length)]));
+function closeModal(id){
+  const modal=document.getElementById(id);
+  if(!modal) return;
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden','true');
+  if(!document.querySelector('.modal.open,.photo-modal.open')) document.body.classList.remove('modal-open');
+}
+function showMessage(text){
+  const target=document.getElementById('modalMessage');
+  if(target) target.textContent=text;
+  openModal('messageModal');
+  bumpSurpriseCount();
+}
 
-function openModal(id){const m=document.getElementById(id);m.classList.add('open');m.setAttribute('aria-hidden','false')}
-function closeModal(id){const m=document.getElementById(id);m.classList.remove('open');m.setAttribute('aria-hidden','true')}
-document.getElementById('letterButton').addEventListener('click',()=>openModal('letterModal'));
-document.querySelectorAll('[data-close]').forEach(el=>el.addEventListener('click',()=>closeModal(el.dataset.close==='letter'?'letterModal':'messageModal')));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('letterModal');closeModal('messageModal')}});
+const surpriseBtn=document.getElementById('surpriseBtn');
+if(surpriseBtn) surpriseBtn.addEventListener('click',()=>showMessage(surpriseMessages[Math.floor(Math.random()*surpriseMessages.length)]));
+const messageButton=document.getElementById('messageButton');
+if(messageButton) messageButton.addEventListener('click',()=>showMessage(jarMessages[Math.floor(Math.random()*jarMessages.length)]));
+const letterButton=document.getElementById('letterButton');
+if(letterButton) letterButton.addEventListener('click',()=>{openModal('letterModal');bumpSurpriseCount()});
 
-const openWhen={
-  bad:'Hey. You do not have to fix the entire day right now. Take one small breath, do one small thing, and be gentle with yourself. Tomorrow gets its own chance.',
-  happy:'YES. Keep this exact energy. Go enjoy your happy little moment and do not let yourself minimise it.',
-  miss:'Then this is your tiny digital hug. The rest of this page is full of things waiting to remind you of good moments.',
-  random:'Excellent reason. No reason is sometimes the best reason. Here is a completely unnecessary amount of affection in website form: ♡'
-};
-document.querySelectorAll('.open-card').forEach(card=>card.addEventListener('click',()=>showMessage(openWhen[card.dataset.open])));
+qsa('[data-close]').forEach(el=>el.addEventListener('click',()=>{
+  const type=el.dataset.close;
+  if(type) closeModal(type+'Modal');
+}));
+
+qsa('.open-card').forEach(card=>card.addEventListener('click',()=>{
+  const messages={
+    bad:'Hey. You do not have to fix the entire day right now. Take one small breath, do one small thing, and be gentle with yourself. Tomorrow gets its own chance.',
+    happy:'YES. Keep this exact energy. Go enjoy your happy little moment and do not let yourself minimise it.',
+    miss:'Then this is your tiny digital hug. The rest of this page is full of things waiting to remind you of good moments.',
+    random:'Excellent reason. No reason is sometimes the best reason. Here is a completely unnecessary amount of affection in website form: ♡'
+  };
+  showMessage(messages[card.dataset.open]||'A tiny thought, saved here for you. ♡');
+}));
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    closeModal('letterModal');
+    closeModal('unlockModal');
+    closeModal('messageModal');
+    closePhotoModal();
+  }
+});
 
 function fallingPetal(){
+  const layer=document.getElementById('petals');
+  if(!layer) return;
   const p=document.createElement('span');
   p.className='petal-float';
   p.textContent=['♥','♡','✦','·'][Math.floor(Math.random()*4)];
   p.style.left=Math.random()*100+'vw';
   p.style.fontSize=(10+Math.random()*14)+'px';
   p.style.animationDuration=(7+Math.random()*7)+'s';
-  document.getElementById('petals').appendChild(p);
+  layer.appendChild(p);
   setTimeout(()=>p.remove(),15000);
 }
 setInterval(fallingPetal,900);
 for(let i=0;i<4;i++) setTimeout(fallingPetal,i*500);
 
-const observer=new IntersectionObserver(entries=>{
-  entries.forEach(entry=>{if(entry.isIntersecting){entry.target.style.animationPlayState='running';observer.unobserve(entry.target)}});
-},{threshold:.12});
-document.querySelectorAll('.reveal').forEach(el=>{el.style.animationPlayState='paused';observer.observe(el)});
+const observer=('IntersectionObserver' in window)?new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      entry.target.style.animationPlayState='running';
+      observer.unobserve(entry.target);
+    }
+  });
+},{threshold:.12}):null;
+qsa('.reveal').forEach(el=>{
+  if(!observer) return;
+  el.style.animationPlayState='paused';
+  observer.observe(el);
+});
 
 const moodLines=[
   'soft and sunny ☼',
@@ -111,12 +162,14 @@ const moodLines=[
 let moodIndex=Math.floor(Math.random()*moodLines.length);
 const moodButton=document.getElementById('moodButton');
 const moodText=document.getElementById('moodText');
-moodButton.addEventListener('click',()=>{
+if(moodText) moodText.textContent=moodLines[moodIndex];
+if(moodButton) moodButton.addEventListener('click',()=>{
   moodIndex=(moodIndex+1)%moodLines.length;
   moodText.textContent=moodLines[moodIndex];
 });
 
-document.getElementById('wishButton').addEventListener('click',(event)=>{
+const wishButton=document.getElementById('wishButton');
+if(wishButton) wishButton.addEventListener('click',event=>{
   for(let i=0;i<7;i++){
     const star=document.createElement('span');
     star.className='wish-star';
@@ -128,23 +181,20 @@ document.getElementById('wishButton').addEventListener('click',(event)=>{
     document.body.appendChild(star);
     setTimeout(()=>star.remove(),2100);
   }
+  bumpSurpriseCount();
 });
 
 const visitKey='softy-surprises-opened';
-let visitCount=Number(localStorage.getItem(visitKey)||0);
+let visitCount=Number.parseInt(localStorage.getItem(visitKey)||'0',10)||0;
 function bumpSurpriseCount(){
   visitCount++;
   localStorage.setItem(visitKey,String(visitCount));
   const el=document.getElementById('visitCount');
-  if(el) el.textContent=visitCount;
+  if(el) el.textContent=String(visitCount);
 }
-document.getElementById('visitCount').textContent=visitCount;
-document.querySelectorAll('#surpriseBtn,#messageButton,.open-card,#newBouquet,#letterButton').forEach(el=>{
-  el.addEventListener('click',bumpSurpriseCount);
-});
+const visitCountEl=document.getElementById('visitCount');
+if(visitCountEl) visitCountEl.textContent=String(visitCount);
 
-
-/* Scroll-driven editorial sequence */
 const progressBar=document.getElementById('scrollProgress');
 const story=document.querySelector('.scroll-story');
 const storyFlower=document.querySelector('.story-flower');
@@ -160,18 +210,33 @@ const storySteps=[
   ['Then a collection of<br><em>little things.</em>','Words, photographs, music and details — all in one quiet corner.'],
   ['And it keeps becoming<br><em>more yours.</em>','This is only the beginning.']
 ];
-function clamp(v,a=0,b=1){return Math.min(b,Math.max(a,v))}
+
+const garden=document.getElementById('garden');
+const gardenCanvas=document.getElementById('gardenCanvas');
+let gardenPaths=[];
+if(gardenCanvas){
+  gardenPaths=qsa('.garden-stem,.bloom path',gardenCanvas);
+  gardenPaths.forEach(path=>{
+    if(typeof path.getTotalLength==='function'){
+      const len=path.getTotalLength();
+      path.style.strokeDasharray=String(len);
+      path.style.strokeDashoffset=String(len);
+    }
+  });
+}
+
 function updateScrollMotion(){
-  const y=window.scrollY;
-  const max=document.documentElement.scrollHeight-window.innerHeight;
-  progressBar.style.width=(max?y/max*100:0)+'%';
-  document.querySelector('.topbar').classList.toggle('scrolled',y>80);
-  if(story){
+  const y=window.scrollY||window.pageYOffset;
+  const max=Math.max(1,document.documentElement.scrollHeight-window.innerHeight);
+  if(progressBar) progressBar.style.width=(y/max*100)+'%';
+  const topbar=document.querySelector('.topbar');
+  if(topbar) topbar.classList.toggle('scrolled',y>80);
+
+  if(story&&storyFlower&&orbitOne&&orbitTwo&&storyCopy&&storyTitle&&storyText&&storyNumber){
     const rect=story.getBoundingClientRect();
-    const p=clamp(-rect.top/(rect.height-window.innerHeight));
-    const eased=p*p*(3-2*p);
+    const denominator=Math.max(1,rect.height-window.innerHeight);
+    const p=clamp(-rect.top/denominator);
     const step=Math.min(3,Math.floor(p*4));
-    const local=(p*4)%1;
     storyFlower.style.transform='translate(-50%,-50%) rotate('+(p*280)+'deg) scale('+(1+.45*Math.sin(p*Math.PI))+')';
     storyFlower.style.left=(50+Math.sin(p*Math.PI*2)*23)+'%';
     storyFlower.style.top=(50+Math.cos(p*Math.PI*2)*13)+'%';
@@ -179,85 +244,295 @@ function updateScrollMotion(){
     orbitTwo.style.transform='translate(-50%,-50%) rotate('+(-p*120)+'deg) scale('+(1-.18*p)+')';
     storyCopy.style.transform='translateY('+(Math.sin(p*Math.PI*4)*14)+'px)';
     storyCopy.style.opacity=String(.72+.28*Math.sin(p*Math.PI));
-    if(p>.03){
-      storyTitle.innerHTML=storySteps[step][0];
-      storyText.textContent=storySteps[step][1];
-      storyNumber.textContent=String(step+1).padStart(2,'0');
-    }
+    storyTitle.innerHTML=storySteps[step][0];
+    storyText.textContent=storySteps[step][1];
+    storyNumber.textContent=String(step+1).padStart(2,'0');
   }
+
+  if(garden&&gardenPaths.length){
+    const r=garden.getBoundingClientRect();
+    const p=clamp((window.innerHeight-r.top)/(r.height+window.innerHeight*.35));
+    gardenPaths.forEach(path=>{
+      const len=path.getTotalLength();
+      path.style.strokeDashoffset=String(len*(1-p));
+      path.style.opacity=String(Math.min(1,p*1.55));
+    });
+    qsa('.bloom',gardenCanvas).forEach((bloom,index)=>{
+      const local=clamp((p-(index*.08))/.55);
+      bloom.style.transform='scale('+(0.55+local*.45)+')';
+      bloom.style.opacity=String(local);
+    });
+  }
+
+  updateMemoryStory();
 }
 let scrollTick=false;
-window.addEventListener('scroll',()=>{if(!scrollTick){requestAnimationFrame(()=>{updateScrollMotion();scrollTick=false});scrollTick=true}},{passive:true});
+window.addEventListener('scroll',()=>{
+  if(scrollTick) return;
+  scrollTick=true;
+  requestAnimationFrame(()=>{ updateScrollMotion(); scrollTick=false; });
+},{passive:true});
 updateScrollMotion();
 
-/* Subtle pointer light — restrained, not game-like */
 const cursorGlow=document.getElementById('cursorGlow');
-if(window.matchMedia('(pointer:fine)').matches){
-  window.addEventListener('pointermove',e=>{cursorGlow.style.left=e.clientX+'px';cursorGlow.style.top=e.clientY+'px';cursorGlow.style.opacity='.75'});
+const heartCursor=document.getElementById('heartCursor');
+if(window.matchMedia&&window.matchMedia('(pointer:fine)').matches){
+  document.body.classList.add('has-heart-cursor');
+  window.addEventListener('pointermove',e=>{
+    if(heartCursor){heartCursor.style.left=e.clientX+'px';heartCursor.style.top=e.clientY+'px';}
+    if(cursorGlow){cursorGlow.style.left=e.clientX+'px';cursorGlow.style.top=e.clientY+'px';cursorGlow.style.opacity='.7';}
+  },{passive:true});
 }
 
-/* Photo archive + music collection */
-const photoNames=["Copy of 20250414_205158.jpg","610.jpg","771.jpg","Copy of 20250418_065929.jpg","1018.jpg","413.jpg","1193.jpg","836.jpg","565.jpg","940.jpg","982.jpg","1225.jpg","570.jpg","564.jpg","558.jpg","835.jpg","1194.jpg","945.jpg","986.jpg","950.jpg","944.jpg","1168.jpg","1237.jpg","1009.jpg","263.jpg","1091.jpg","1000001011.jpg","923.jpg","Copy of IMG_20250415_215058_524.jpg","922.jpg","Copy of Snapchat-211457099.jpg","1108.jpg","517.jpg","1083.jpg","1256.jpg","1242.jpg","1281.jpg","1243.jpg","1257.jpg","516.jpg","879.jpg","1123.jpg","1094.jpg","925.jpg","449.jpg","Copy of 20250414_205315.jpg","1311.jpg","450.jpg","1073.jpg","518.jpg","915.jpg","1265.jpg","1072.jpg","451.jpg","Copy of 20250401_180856.jpg","Copy of 20250319_184735.jpg","1312.jpg","447.jpg","1266.jpg","1267.jpg","917.jpg","1071.jpg","330.jpg","1061.jpg","912.jpg","1060.jpg","325.jpg","496.jpg","Copy of Snapchat-415738145.jpg","Copy of Snapchat-510064617.jpg","508.jpg","497.jpg","1010.jpg","Copy of 20250208_155121.jpg","1206.jpg","Copy of Snapchat-1870040060.jpg","Copy of Snapchat-1152265864.jpg","Copy of 20250418_065842.jpg","1007.jpg","1204.jpg","1006.jpg","756.jpg","Copy of Snapchat-430357962.jpg","Copy of 20250418_065924.jpg","Copy of 20250414_205222.jpg","1203.jpg","Copy of 20250208_155124.jpg","782.jpg","1174.jpg","609.jpg"];
-const memoryGrid=document.getElementById('memoryGrid');
-if(memoryGrid){
-  memoryGrid.innerHTML='';
+const unlockButton=document.getElementById('unlockButton');
+const unlockHeart=document.getElementById('unlockHeart');
+const lockStatus=document.getElementById('lockStatus');
+if(unlockButton) unlockButton.addEventListener('click',()=>{openModal('unlockModal');bumpSurpriseCount()});
+if(unlockHeart) unlockHeart.addEventListener('click',()=>{
+  const lockIcon=document.getElementById('lockIcon');
+  if(lockIcon) lockIcon.textContent='💗';
+  if(lockStatus) lockStatus.textContent='Unlocked. Welcome to the softest part of Softy. ♡';
+  unlockHeart.textContent='heart unlocked ♡';
+  unlockHeart.disabled=true;
+  const paper=document.querySelector('.lock-paper');
+  if(paper) paper.classList.add('unlocked');
+});
+
+const photoNames=Array.from({length:90},(_,i)=>'photo-'+String(i+1).padStart(3,'0'));
+const memoryStory=[
+  ['One little moment.','The kind you almost scroll past before realizing you want to keep it forever.'],
+  ['Then another.','The gallery is not a wall of thumbnails anymore — it is a little world you can wander through.'],
+  ['And another.','Keep moving. The next memory is waiting somewhere unexpected.'],
+  ['Then somehow…','They stop feeling like separate pictures.'],
+  ['They become','a collection of tiny pieces of us.'],
+  ['And at the end,','they all get to exist together.']
+];
+const memoryScene=document.getElementById('memoryScene');
+const memoryStorySection=document.getElementById('memories');
+const memoryStorySticky=document.querySelector('.memory-story-sticky');
+const memoryStoryTitle=document.getElementById('memoryStoryTitle');
+const memoryStoryText=document.getElementById('memoryStoryText');
+const memoryStoryNumber=document.getElementById('memoryStoryNumber');
+const memoryStoryTotal=document.getElementById('memoryStoryTotal');
+const memoryStoryCopy=document.getElementById('memoryStoryCopy');
+const memoryStoryFinale=document.getElementById('memoryStoryFinale');
+
+function seeded(i,salt){
+  const x=Math.sin(i*12.9898+salt*78.233)*43758.5453;
+  return x-Math.floor(x);
+}
+function buildMemoryStory(){
+  if(!memoryScene) return;
+  memoryScene.innerHTML='';
+  if(memoryStoryTotal) memoryStoryTotal.textContent=String(photoNames.length);
   photoNames.forEach((name,index)=>{
     const card=document.createElement('figure');
-    card.className='memory-photo reveal';
-    card.innerHTML='<img src="assets/photos/'+name+'.jpg" alt="Memory '+(index+1)+'" loading="lazy"><figcaption>'+String(index+1).padStart(2,'0')+'</figcaption>';
-    memoryGrid.appendChild(card);
+    card.className='story-photo';
+    const x=(8+seeded(index,1)*84)+'vw';
+    const y=(7+seeded(index,2)*82)+'vh';
+    const r=(-17+seeded(index,3)*34)+'deg';
+    const s=(.68+seeded(index,4)*.4).toFixed(2);
+    card.style.setProperty('--x',x);
+    card.style.setProperty('--y',y);
+    card.style.setProperty('--r',r);
+    card.style.setProperty('--s',s);
+    card.dataset.index=String(index);
+    card.innerHTML='<img src="assets/photos/'+name+'.jpg" alt="Memory '+String(index+1)+'" loading="lazy" decoding="async"><figcaption>'+String(index+1).padStart(2,'0')+'</figcaption>';
+    const image=card.querySelector('img');
+    image.addEventListener('error',()=>card.classList.add('is-missing'),{once:true});
+    card.addEventListener('click',()=>openPhotoModal(index));
+    memoryScene.appendChild(card);
   });
 }
+function updateMemoryStory(){
+  if(!memoryStorySection||!memoryScene) return;
+  const rect=memoryStorySection.getBoundingClientRect();
+  const travel=Math.max(1,rect.height-window.innerHeight);
+  const p=clamp(-rect.top/travel);
+  const cards=qsa('.story-photo',memoryScene);
+  const center=p*(cards.length-1);
+  const finale=clamp((p-.88)/.12);
+  cards.forEach((card,index)=>{
+    const dist=Math.abs(index-center);
+    const core=clamp(1-dist/6);
+    const isActive=dist<.62;
+    const finalOpacity=.12+finale*.28;
+    const opacity=Math.max(core,finalOpacity)*(1-.32*finale);
+    const scaleBoost=isActive?.18:0;
+    const localScale=isActive?1.02:Math.max(.74,1-dist*.06);
+    card.style.opacity=String(opacity);
+    card.style.filter='blur('+Math.max(0,(dist-2.2)*1.2)+'px)';
+    card.style.transform='translate3d(var(--x),var(--y),0) rotate(var(--r)) scale(calc(var(--s)*'+(localScale+scaleBoost)+'))';
+    card.style.zIndex=String(40+Math.round((7-dist)*6)+(isActive?50:0));
+    card.classList.toggle('is-active',isActive);
+  });
 
-const playlist=[{"title":"Until I Found You — Solo","src":"assets/music/until-i-found-you-solo.mp3"},{"title":"Until I Found You — Em Beihold Version","src":"assets/music/until-i-found-you-em-beihold-version.mp3"},{"title":"Here With Me","src":"assets/music/here-with-me.mp3"},{"title":"Young Dumb & Broke","src":"assets/music/young-dumb-broke.mp3"},{"title":"With You — AP Dhillon","src":"assets/music/with-you-ap-dhillon.mp3"},{"title":"I Wanna Be Yours","src":"assets/music/i-wanna-be-yours.mp3"},{"title":"Die For You","src":"assets/music/die-for-you.mp3"},{"title":"I Like the Way You Kiss Me — Sped Up","src":"assets/music/i-like-the-way-you-kiss-me-sped-up.mp3"},{"title":"Me Gustas Tu — Sped Up","src":"assets/music/me-gustas-tu-sped-up.mp3"},{"title":"Good Luck, Charm","src":"assets/music/good-luck-charm.mp3"},{"title":"Just the Two of Us","src":"assets/music/just-the-two-of-us.mp3"},{"title":"Put Your Head on My Shoulder","src":"assets/music/put-your-head-on-my-shoulder.mp3"},{"title":"We Fell in Love in October","src":"assets/music/we-fell-in-love-in-october.mp3"},{"title":"Double Take","src":"assets/music/double-take.mp3"},{"title":"Jo Tum Mere Ho","src":"assets/music/jo-tum-mere-ho.mp3"},{"title":"Teenage Dream","src":"assets/music/teenage-dream.mp3"},{"title":"Make You Mine","src":"assets/music/make-you-mine.mp3"},{"title":"This Is What Autumn Feels Like","src":"assets/music/this-is-what-autumn-feels-like.mp3"},{"title":"Die With A Smile","src":"assets/music/die-with-a-smile.mp3"},{"title":"Wildest Dreams","src":"assets/music/wildest-dreams.mp3"},{"title":"Lover — Shawn Mendes Version","src":"assets/music/lover-shawn-mendes-version.mp3"},{"title":"Her","src":"assets/music/her.mp3"},{"title":"Next to You","src":"assets/music/next-to-you.mp3"},{"title":"O Rangrez","src":"assets/music/o-rangrez.mp3"},{"title":"SAILOR SONG","src":"assets/music/sailor-song.mp3"},{"title":"No. 1 Party Anthem","src":"assets/music/no-1-party-anthem.mp3"},{"title":"My Love All Mine","src":"assets/music/my-love-all-mine.mp3"},{"title":"Number 1 Girl","src":"assets/music/number-1-girl.mp3"},{"title":"Gosh She Looks Pretty","src":"assets/music/gosh-she-looks-pretty.mp3"},{"title":"Valleys","src":"assets/music/valleys.mp3"},{"title":"I Love You So","src":"assets/music/i-love-you-so.mp3"},{"title":"Eenie Meenie","src":"assets/music/eenie-meenie.mp3"},{"title":"You Belong With Me","src":"assets/music/you-belong-with-me.mp3"},{"title":"Say Yes to Heaven","src":"assets/music/say-yes-to-heaven.mp3"},{"title":"Chaar Kadam","src":"assets/music/chaar-kadam.mp3"},{"title":"Dooron Dooron","src":"assets/music/dooron-dooron.mp3"},{"title":"Bairaiyya","src":"assets/music/bairaiyya.mp3"},{"title":"Rang Jo Lagyo","src":"assets/music/rang-jo-lagyo.mp3"},{"title":"Tere Bina","src":"assets/music/tere-bina.mp3"},{"title":"Thinking of You — AP Dhillon","src":"assets/music/thinking-of-you-ap-dhillon.mp3"},{"title":"Laavan","src":"assets/music/laavan.mp3"}];
+  const chapter=Math.min(memoryStory.length-1,Math.floor(p*memoryStory.length));
+  const stageCopy=memoryStory[chapter];
+  if(memoryStoryTitle) memoryStoryTitle.innerHTML=stageCopy[0]+'<br><em>'+stageCopy[1].split(' — ')[0]+'</em>';
+  if(memoryStoryText) memoryStoryText.textContent=stageCopy[1].includes(' — ')?stageCopy[1].split(' — ').slice(1).join(' — '):stageCopy[1];
+  if(memoryStoryNumber) memoryStoryNumber.textContent=String(Math.min(cards.length,Math.floor(center)+1)).padStart(2,'0');
+  if(memoryStoryCopy) memoryStoryCopy.style.transform='translateY('+(Math.sin(p*Math.PI*4)*10)+'px) scale('+(1-.035*finale)+')';
+  if(memoryStorySticky) memoryStorySticky.classList.toggle('is-finale',finale>.4);
+  if(memoryStoryFinale) memoryStoryFinale.style.opacity=String(finale);
+}
+buildMemoryStory();
+
+let lightboxIndex=0;
+const photoModal=document.getElementById('photoModal');
+const photoModalImage=document.getElementById('photoModalImage');
+const photoModalCaption=document.getElementById('photoModalCaption');
+function openPhotoModal(index){
+  lightboxIndex=(index+photoNames.length)%photoNames.length;
+  const name=photoNames[lightboxIndex];
+  if(photoModalImage){
+    photoModalImage.src='assets/photos/'+name+'.jpg';
+    photoModalImage.alt='Memory '+String(lightboxIndex+1);
+  }
+  if(photoModalCaption) photoModalCaption.textContent='memory '+String(lightboxIndex+1).padStart(2,'0')+' / '+String(photoNames.length).padStart(2,'0');
+  if(photoModal){photoModal.classList.add('open');photoModal.setAttribute('aria-hidden','false');document.body.classList.add('modal-open');}
+}
+function closePhotoModal(){
+  if(!photoModal) return;
+  photoModal.classList.remove('open');
+  photoModal.setAttribute('aria-hidden','true');
+  if(!document.querySelector('.modal.open,.photo-modal.open')) document.body.classList.remove('modal-open');
+}
+function stepPhoto(delta){openPhotoModal(lightboxIndex+delta)}
+const photoModalClose=document.getElementById('photoModalClose');
+const photoModalPrev=document.getElementById('photoModalPrev');
+const photoModalNext=document.getElementById('photoModalNext');
+if(photoModalClose) photoModalClose.addEventListener('click',closePhotoModal);
+if(photoModalPrev) photoModalPrev.addEventListener('click',()=>stepPhoto(-1));
+if(photoModalNext) photoModalNext.addEventListener('click',()=>stepPhoto(1));
+if(photoModal) photoModal.addEventListener('click',e=>{if(e.target===photoModal) closePhotoModal()});
+
+const playlist=[
+  ["Until I Found You — Solo","until-i-found-you-solo.mp3"],
+  ["Until I Found You — Em Beihold Version","until-i-found-you-em-beihold-version.mp3"],
+  ["Here With Me","here-with-me.mp3"],
+  ["Young Dumb & Broke","young-dumb-broke.mp3"],
+  ["With You — AP Dhillon","with-you-ap-dhillon.mp3"],
+  ["I Wanna Be Yours","i-wanna-be-yours.mp3"],
+  ["Die For You","die-for-you.mp3"],
+  ["I Like the Way You Kiss Me — Sped Up","i-like-the-way-you-kiss-me-sped-up.mp3"],
+  ["Me Gustas Tu — Sped Up","me-gustas-tu-sped-up.mp3"],
+  ["Good Luck, Charm","good-luck-charm.mp3"],
+  ["Just the Two of Us","just-the-two-of-us.mp3"],
+  ["Put Your Head on My Shoulder","put-your-head-on-my-shoulder.mp3"],
+  ["We Fell in Love in October","we-fell-in-love-in-october.mp3"],
+  ["Double Take","double-take.mp3"],
+  ["Jo Tum Mere Ho","jo-tum-mere-ho.mp3"],
+  ["Teenage Dream","teenage-dream.mp3"],
+  ["Make You Mine","make-you-mine.mp3"],
+  ["This Is What Autumn Feels Like","this-is-what-autumn-feels-like.mp3"],
+  ["Die With A Smile","die-with-a-smile.mp3"],
+  ["Wildest Dreams","wildest-dreams.mp3"],
+  ["Lover — Shawn Mendes Version","lover-shawn-mendes-version.mp3"],
+  ["Her","her.mp3"],
+  ["Next to You","next-to-you.mp3"],
+  ["O Rangrez","o-rangrez.mp3"],
+  ["SAILOR SONG","sailor-song.mp3"],
+  ["No. 1 Party Anthem","no-1-party-anthem.mp3"],
+  ["My Love All Mine","my-love-all-mine.mp3"],
+  ["Number 1 Girl","number-1-girl.mp3"],
+  ["Gosh She Looks Pretty","gosh-she-looks-pretty.mp3"],
+  ["Valleys","valleys.mp3"],
+  ["I Love You So","i-love-you-so.mp3"],
+  ["Eenie Meenie","eenie-meenie.mp3"],
+  ["You Belong With Me","you-belong-with-me.mp3"],
+  ["Say Yes to Heaven","say-yes-to-heaven.mp3"],
+  ["Chaar Kadam","chaar-kadam.mp3"],
+  ["Dooron Dooron","dooron-dooron.mp3"],
+  ["Bairaiyya","bairaiyya.mp3"],
+  ["Rang Jo Lagyo","rang-jo-lagyo.mp3"],
+  ["Tere Bina","tere-bina.mp3"],
+  ["Thinking of You — AP Dhillon","thinking-of-you-ap-dhillon.mp3"],
+  ["Laavan","laavan.mp3"]
+];
+
+function shuffle(items){
+  const arr=[...items];
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+const queue=shuffle(playlist);
 const audio=document.createElement('audio');
-audio.preload='metadata';
+audio.preload='none';
+audio.setAttribute('aria-hidden','true');
 document.body.appendChild(audio);
-let trackIndex=Math.floor(Math.random()*playlist.length);
+let trackIndex=0;
+let musicProblem=false;
 const trackTitle=document.getElementById('trackTitle');
 const trackArtist=document.getElementById('trackArtist');
 const playButton=document.getElementById('playTrack');
 const playerProgress=document.getElementById('playerProgress');
 const currentTime=document.getElementById('currentTime');
 const duration=document.getElementById('duration');
-function fmt(t){if(!Number.isFinite(t))return '0:00';return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')}
-function loadTrack(i,autoplay=false){trackIndex=(i+playlist.length)%playlist.length;const track=playlist[trackIndex];trackTitle.textContent=track.title;trackArtist.textContent='Softy playlist · '+(trackIndex+1)+' / '+playlist.length;audio.src=track.src;audio.load();if(autoplay)audio.play().catch(()=>{});playButton.textContent='▶'}
-loadTrack(trackIndex);
-playButton.addEventListener('click',()=>{if(audio.paused){audio.play().then(()=>playButton.textContent='Ⅱ').catch(()=>{});}else{audio.pause();playButton.textContent='▶'}});
-document.getElementById('prevTrack').addEventListener('click',()=>loadTrack(trackIndex-1,true));
-document.getElementById('nextTrack').addEventListener('click',()=>loadTrack(trackIndex+1,true));
-audio.addEventListener('timeupdate',()=>{playerProgress.style.width=(audio.duration?audio.currentTime/audio.duration*100:0)+'%';currentTime.textContent=fmt(audio.currentTime);duration.textContent=fmt(audio.duration)});
-audio.addEventListener('play',()=>playButton.textContent='Ⅱ');audio.addEventListener('pause',()=>playButton.textContent='▶');audio.addEventListener('ended',()=>loadTrack(trackIndex+1,true));
-document.querySelector('.player-progress').addEventListener('click',e=>{if(!audio.duration)return;const r=e.currentTarget.getBoundingClientRect();audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration});
-const musicPlayer=document.getElementById('musicPlayer');
-document.getElementById('playerToggle').addEventListener('click',()=>musicPlayer.classList.toggle('open'));document.getElementById('playerClose').addEventListener('click',()=>musicPlayer.classList.remove('open'));
-
-/* Heart cursor */
-const heartCursor=document.getElementById('heartCursor');
-if(heartCursor && window.matchMedia('(pointer:fine)').matches){document.body.classList.add('has-heart-cursor');window.addEventListener('pointermove',e=>{heartCursor.style.left=e.clientX+'px';heartCursor.style.top=e.clientY+'px';},{passive:true});}
-
-/* Unlock My Heart */
-const unlockButton=document.getElementById('unlockButton');
-const unlockModal=document.getElementById('unlockModal');
-const unlockHeart=document.getElementById('unlockHeart');
-const lockStatus=document.getElementById('lockStatus');
-if(unlockButton)unlockButton.addEventListener('click',()=>openModal('unlockModal'));
-if(unlockHeart)unlockHeart.addEventListener('click',()=>{document.getElementById('lockIcon').textContent='💗';lockStatus.textContent='Unlocked. Welcome to the softest part of Softy. ♡';unlockHeart.textContent='heart unlocked ♡';unlockHeart.disabled=true;document.querySelector('.lock-paper').classList.add('unlocked');});
-document.querySelectorAll('[data-close="unlock"]').forEach(el=>el.addEventListener('click',()=>closeModal('unlockModal')));
-
-/* Scroll-grown SVG garden */
-const garden=document.getElementById('garden');
-const gardenCanvas=document.getElementById('gardenCanvas');
-if(gardenCanvas){
-  const paths=[...gardenCanvas.querySelectorAll('.garden-stem,.bloom path,.bloom circle')];
-  paths.forEach(p=>{const len=p.getTotalLength?p.getTotalLength():100;p.style.strokeDasharray=len;p.style.strokeDashoffset=len;});
-  const growGarden=()=>{const r=garden.getBoundingClientRect();const p=Math.min(1,Math.max(0,(window.innerHeight-r.top)/(r.height+window.innerHeight*.35)));gardenCanvas.style.setProperty('--garden-progress',p);paths.forEach((path,i)=>{const len=path.getTotalLength?path.getTotalLength():100;path.style.strokeDashoffset=String(len*(1-p));path.style.opacity=String(Math.min(1,p*1.8));});};
-  window.addEventListener('scroll',growGarden,{passive:true});growGarden();
+const playerProgressBar=document.querySelector('.player-progress');
+function fmt(t){ return Number.isFinite(t)?Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'):'0:00'; }
+function loadTrack(index,autoplay=false){
+  trackIndex=(index+queue.length)%queue.length;
+  const [title,file]=queue[trackIndex];
+  musicProblem=false;
+  if(trackTitle) trackTitle.textContent=title;
+  if(trackArtist) trackArtist.textContent='shuffle · '+String(trackIndex+1)+' / '+String(queue.length);
+  audio.src='assets/music/'+file;
+  audio.load();
+  if(playerProgress) playerProgress.style.width='0%';
+  if(currentTime) currentTime.textContent='0:00';
+  if(duration) duration.textContent='0:00';
+  if(playButton) playButton.textContent='▶';
+  if(autoplay) attemptPlay();
 }
+function attemptPlay(){
+  audio.play().then(()=>{
+    if(playButton) playButton.textContent='Ⅱ';
+  }).catch(()=>{
+    if(trackArtist && musicProblem===false) trackArtist.textContent='click play when your audio files are added';
+  });
+}
+loadTrack(0);
+if(playButton) playButton.addEventListener('click',()=>{
+  if(audio.paused) attemptPlay();
+  else audio.pause();
+});
+const prevTrack=document.getElementById('prevTrack');
+const nextTrack=document.getElementById('nextTrack');
+if(prevTrack) prevTrack.addEventListener('click',()=>loadTrack(trackIndex-1,true));
+if(nextTrack) nextTrack.addEventListener('click',()=>loadTrack(trackIndex+1,true));
+audio.addEventListener('loadedmetadata',()=>{if(duration) duration.textContent=fmt(audio.duration)});
+audio.addEventListener('timeupdate',()=>{
+  const pct=audio.duration?audio.currentTime/audio.duration*100:0;
+  if(playerProgress) playerProgress.style.width=pct+'%';
+  if(currentTime) currentTime.textContent=fmt(audio.currentTime);
+  if(duration) duration.textContent=fmt(audio.duration);
+});
+audio.addEventListener('play',()=>{if(playButton) playButton.textContent='Ⅱ'});
+audio.addEventListener('pause',()=>{if(playButton) playButton.textContent='▶'});
+audio.addEventListener('ended',()=>loadTrack(trackIndex+1,true));
+audio.addEventListener('error',()=>{
+  musicProblem=true;
+  if(playButton) playButton.textContent='▶';
+  if(trackArtist) trackArtist.textContent='audio file missing · add it to assets/music/';
+});
+if(playerProgressBar) playerProgressBar.addEventListener('click',e=>{
+  if(!Number.isFinite(audio.duration)) return;
+  const r=e.currentTarget.getBoundingClientRect();
+  audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration;
+});
+const musicPlayer=document.getElementById('musicPlayer');
+const playerToggle=document.getElementById('playerToggle');
+const playerClose=document.getElementById('playerClose');
+if(playerToggle) playerToggle.addEventListener('click',()=>musicPlayer&&musicPlayer.classList.toggle('open'));
+if(playerClose) playerClose.addEventListener('click',()=>musicPlayer&&musicPlayer.classList.remove('open'));
 
-/* Heart cursor */
-const heartCursor=document.getElementById('heartCursor');if(heartCursor&&window.matchMedia('(pointer:fine)').matches){document.body.classList.add('has-heart-cursor');window.addEventListener('pointermove',e=>{heartCursor.style.left=e.clientX+'px';heartCursor.style.top=e.clientY+'px'},{passive:true});}
-/* Unlock My Heart */
-const unlockButton=document.getElementById('unlockButton'),unlockHeart=document.getElementById('unlockHeart'),lockStatus=document.getElementById('lockStatus');if(unlockButton)unlockButton.addEventListener('click',()=>openModal('unlockModal'));if(unlockHeart)unlockHeart.addEventListener('click',()=>{document.getElementById('lockIcon').textContent='💗';lockStatus.textContent='Unlocked. Welcome to the softest part of Softy. ♡';unlockHeart.textContent='heart unlocked ♡';unlockHeart.disabled=true;document.querySelector('.lock-paper').classList.add('unlocked')});document.querySelectorAll('[data-close="unlock"]').forEach(el=>el.addEventListener('click',()=>closeModal('unlockModal')));
-/* Scroll-grown SVG garden */
-const garden=document.getElementById('garden'),gardenCanvas=document.getElementById('gardenCanvas');if(gardenCanvas&&garden){const paths=[...gardenCanvas.querySelectorAll('.garden-stem,.bloom path')];paths.forEach(p=>{const len=p.getTotalLength();p.style.strokeDasharray=len;p.style.strokeDashoffset=len});const growGarden=()=>{const r=garden.getBoundingClientRect(),p=Math.min(1,Math.max(0,(innerHeight-r.top)/(r.height+innerHeight*.35)));paths.forEach(path=>{const len=path.getTotalLength();path.style.strokeDashoffset=len*(1-p)});gardenCanvas.style.setProperty('--garden-progress',p)};addEventListener('scroll',growGarden,{passive:true});growGarden()}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'&&photoModal?.classList.contains('open')) stepPhoto(-1);
+  if(e.key==='ArrowRight'&&photoModal?.classList.contains('open')) stepPhoto(1);
+});
+
+window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
