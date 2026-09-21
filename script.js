@@ -611,54 +611,7 @@ function shuffle(items){
     if(e.key==='ArrowRight') showPhoto(currentPhoto+1);
   });
 
-  /* ---------- MUSIC PLAYER: reliable open/close + graceful audio ---------- */
-  const player = $('#musicPlayer');
-  const toggle = $('#playerToggle');
-  const close = $('#playerClose');
-  const play = $('#playTrack');
-  const audio = document.querySelector('audio');
-  function setPlayer(open){
-    if(!player) return;
-    player.classList.toggle('open',open);
-    if(toggle) toggle.setAttribute('aria-expanded',String(open));
-  }
-  if(toggle){
-    toggle.onclick = e=>{ e.preventDefault(); e.stopPropagation(); setPlayer(!player.classList.contains('open')); };
-    toggle.onpointerdown = e=>e.stopPropagation();
-  }
-  if(close) close.onclick = e=>{e.preventDefault();e.stopPropagation();setPlayer(false);};
-  if(play && audio){
-    play.onclick = async e=>{
-      e.preventDefault();
-      if(audio.paused || audio.muted){
-        try{ audio.muted=false; await audio.play(); }
-        catch(err){
-          try{ audio.muted=true; await audio.play(); }
-          catch(_){}
-        }
-      }else audio.pause();
-    };
-  }
-
-  /* Browser autoplay policies may block sound until interaction; never let that
-     prevent the UI from opening. */
-  document.addEventListener('pointerdown',()=>{
-    if(audio && audio.muted){
-      audio.muted=false;
-      if(audio.paused && audio.src) audio.play().catch(()=>{});
-    }
-  },{once:true,passive:true});
-
-  /* Don't pause the user's music just because the tab briefly loses focus. */
-  window.removeEventListener('blur', window.__softyOldBlurHandler || (()=>{}));
-
-  /* Keep the player usable even if an external audio URL dies. */
-  if(audio){
-    audio.addEventListener('error',()=>{
-      const artist = $('#trackArtist');
-      if(artist) artist.textContent='music file unavailable · the player itself is working ♡';
-    });
-  }
+  /* Music is intentionally handled by the single final engine below. */
 })();
 
 
@@ -1105,33 +1058,26 @@ function shuffle(items){
 
 
 
-/* ================= SOFTY PRIVATE PERSISTENT CHAT =================
-   No visible login.
-   No room codes.
-   Persistent cross-device chat via Firebase Realtime Database.
-   Message content is encrypted in-browser with AES-GCM; the key lives
-   only in the private invite URL fragment and localStorage.
+
+
+/* ================= SOFTY PRIVATE CHAT · ROOM 143 =================
+   No login UI. No links. No room-code input.
+   Every device uses the same persistent room: 143.
+   Firebase provides persistence; message text is encrypted in-browser.
 ================================================================= */
-(function softyPrivateChat(){
+(function softyPrivateChat143(){
   'use strict';
 
   const chat=document.getElementById('softyChat');
   const fab=document.getElementById('softyChatFab');
   const panel=document.getElementById('softyChatPanel');
   const closeBtn=document.getElementById('softyChatClose');
-  const intro=document.getElementById('softyChatIntro');
-  const room=document.getElementById('softyChatRoom');
+  const roomEl=document.getElementById('softyChatRoom');
   const status=document.getElementById('softyChatStatus');
   const statusLabel=status?.querySelector('span:last-child');
-  const nameInput=document.getElementById('softyChatName');
-  const startBtn=document.getElementById('softyChatStart');
-  const restoreBtn=document.getElementById('softyChatRestore');
-  const errorBox=document.getElementById('softyChatError');
-  const roomState=document.getElementById('softyChatRoomState');
-  const shareBtn=document.getElementById('softyChatShare');
-  const forgetBtn=document.getElementById('softyChatForget');
-  const waiting=document.getElementById('softyChatWaiting');
+  const stateEl=document.getElementById('softyChatRoomState');
   const messagesEl=document.getElementById('softyChatMessages');
+  const emptyEl=document.getElementById('softyChatEmpty');
   const typingEl=document.getElementById('softyChatTyping');
   const compose=document.getElementById('softyChatCompose');
   const input=document.getElementById('softyChatInput');
@@ -1139,38 +1085,28 @@ function shuffle(items){
   const heartBtn=document.getElementById('softyChatHeart');
   const unread=document.getElementById('softyChatUnread');
 
-  if(!chat||!fab||!panel||!intro||!room) return;
+  if(!chat||!fab||!panel||!roomEl)return;
 
-  const STORAGE_KEY='softy-private-chat-v1';
-  const NAME_KEY='softy-chat-name';
+  const ROOM_ID='143';
+  const ROOM_SECRET='softy-private-chat-143';
   const firebaseConfig=window.SOFTY_FIREBASE_CONFIG||null;
 
   let db=null;
   let auth=null;
   let user=null;
-  let roomId='';
-  let roomKey='';
-  let cryptoKey=null;
   let messagesRef=null;
-  let messagesUnsubscribe=null;
   let typingRef=null;
-  let typingUnsubscribe=null;
+  let messageListener=null;
+  let typingListener=null;
+  let cryptoKey=null;
   let typingTimer=null;
   let unseen=0;
-  let myName=localStorage.getItem(NAME_KEY)||'';
-  let remoteName='them';
-
-  if(nameInput) nameInput.value=myName;
 
   function setOpen(open){
     chat.classList.toggle('open',open);
     fab.setAttribute('aria-expanded',String(open));
     panel.setAttribute('aria-hidden',String(!open));
-    if(open){
-      unseen=0;
-      updateUnread();
-      setTimeout(()=>input?.focus(),120);
-    }
+    if(open){unseen=0;updateUnread();setTimeout(()=>input?.focus(),120);}
   }
   fab.addEventListener('click',()=>setOpen(!chat.classList.contains('open')));
   closeBtn?.addEventListener('click',()=>setOpen(false));
@@ -1179,403 +1115,196 @@ function shuffle(items){
     status?.classList.toggle('live',live);
     if(statusLabel)statusLabel.textContent=text;
   }
-
-  function setError(message=''){
-    if(errorBox)errorBox.textContent=message;
-  }
-
   function updateUnread(){
     if(!unread)return;
     unread.textContent=String(unseen);
     unread.classList.toggle('show',unseen>0);
     unread.setAttribute('aria-hidden',String(unseen===0));
   }
-
-  function validConfig(){
-    if(!firebaseConfig)return false;
-    const values=['apiKey','authDomain','databaseURL','projectId','appId'];
-    return values.every(key=>typeof firebaseConfig[key]==='string' && !firebaseConfig[key].includes('__PASTE_'));
+  function setState(text){
+    if(stateEl)stateEl.textContent=text;
   }
 
-  function ensureName(){
-    myName=(nameInput?.value||myName||'You').trim().replace(/\s+/g,' ').slice(0,18)||'You';
-    localStorage.setItem(NAME_KEY,myName);
+  async function deriveKey(){
+    const bytes=new TextEncoder().encode(ROOM_SECRET);
+    const digest=await crypto.subtle.digest('SHA-256',bytes);
+    return crypto.subtle.importKey('raw',digest,{name:'AES-GCM'},false,['encrypt','decrypt']);
   }
 
-  function toB64(bytes){
-    let binary='';
-    bytes.forEach(byte=>binary+=String.fromCharCode(byte));
-    return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  function b64(bytes){
+    let s='';for(const b of bytes)s+=String.fromCharCode(b);
+    return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
   }
-
-  function fromB64(text){
-    const padded=text.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((text.length+3)%4);
-    const binary=atob(padded);
-    return Uint8Array.from(binary,ch=>ch.charCodeAt(0));
+  function unb64(s){
+    const p=s.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-s.length%4)%4);
+    const raw=atob(p);
+    return Uint8Array.from(raw,ch=>ch.charCodeAt(0));
   }
-
-  function randomB64(byteLength){
-    const bytes=new Uint8Array(byteLength);
-    crypto.getRandomValues(bytes);
-    return toB64(bytes);
-  }
-
-  async function importRoomKey(encoded){
-    const raw=fromB64(encoded);
-    if(raw.byteLength!==32)throw new Error('Invalid private chat key');
-    return crypto.subtle.importKey('raw',raw,{name:'AES-GCM'},false,['encrypt','decrypt']);
-  }
-
-  async function encryptPayload(payload){
+  async function encrypt(data){
     const iv=crypto.getRandomValues(new Uint8Array(12));
-    const plain=new TextEncoder().encode(JSON.stringify(payload));
+    const plain=new TextEncoder().encode(JSON.stringify(data));
     const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},cryptoKey,plain);
-    return {iv:toB64(iv),ciphertext:toB64(new Uint8Array(cipher))};
+    return {iv:b64(iv),ciphertext:b64(new Uint8Array(cipher))};
   }
-
-  async function decryptPayload(packet){
-    const iv=fromB64(packet.iv);
-    const cipher=fromB64(packet.ciphertext);
+  async function decrypt(packet){
+    const iv=unb64(packet.iv),cipher=unb64(packet.ciphertext);
     const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv},cryptoKey,cipher);
     return JSON.parse(new TextDecoder().decode(plain));
   }
 
-  function parseInvite(){
-    const url=new URL(window.location.href);
-    const encodedKey=url.hash.startsWith('#key=')?url.hash.slice(5):'';
-    const incomingRoom=url.searchParams.get('chat')||'';
-    return {incomingRoom,incomingKey:encodedKey};
-  }
-
-  function loadSavedChat(){
-    try{
-      const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
-      if(saved?.roomId&&saved?.key)return saved;
-    }catch(_){}
-    return null;
-  }
-
-  function saveChat(){
-    localStorage.setItem(STORAGE_KEY,JSON.stringify({roomId,key:roomKey}));
-  }
-
-  function clearSavedChat(){
-    localStorage.removeItem(STORAGE_KEY);
-  }
-
-  function cleanInviteFromAddressBar(){
-    const url=new URL(window.location.href);
-    url.searchParams.delete('chat');
-    url.hash='';
-    window.history.replaceState({},document.title,url.pathname+url.search+url.hash);
-  }
-
-  function makeInvite(){
-    const url=new URL(window.location.href);
-    url.searchParams.set('chat',roomId);
-    url.hash='key='+roomKey;
-    return url.toString();
-  }
-
-  function roomPath(){
-    return firebase.database().ref('softyRooms/'+roomId);
-  }
-
-  function clearRendered(){
-    if(messagesEl)messagesEl.innerHTML='';
-  }
-
-  function renderMessage(message){
-    if(!messagesEl)return;
-    const wrap=document.createElement('div');
-    const me=message.senderUid===user?.uid;
-    wrap.className='softy-chat-bubble-wrap '+(me?'me':'them');
-
-    const bubble=document.createElement('article');
-    bubble.className='softy-chat-bubble';
-
-    const sender=document.createElement('span');
-    sender.className='softy-chat-sender';
-    sender.textContent=me?'you':remoteName;
-
-    const text=document.createElement('p');
-    text.className='softy-chat-text';
-    text.textContent=String(message.text||'').slice(0,500);
-
-    const time=document.createElement('span');
-    time.className='softy-chat-time';
-    time.textContent=new Date(message.ts||Date.now()).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
-
-    bubble.append(sender,text,time);
-    wrap.appendChild(bubble);
-    messagesEl.appendChild(wrap);
-  }
-
-  async function renderSnapshot(snapshot){
-    clearRendered();
-    const raw=snapshot.val()||{};
-    const entries=Object.entries(raw).sort((a,b)=>{
-      const ta=Number(a[1]?.createdAt||0),tb=Number(b[1]?.createdAt||0);
-      return ta-tb;
-    }).slice(-200);
-
-    for(const [,packet] of entries){
-      if(packet?.type!=='message'||!packet.ciphertext||!packet.iv)continue;
-      try{
-        const message=await decryptPayload(packet);
-        if(message?.text)renderMessage(message);
-      }catch(_){}
-    }
-    if(messagesEl)messagesEl.scrollTop=messagesEl.scrollHeight;
+  function validConfig(){
+    if(!firebaseConfig)return false;
+    return ['apiKey','authDomain','databaseURL','projectId','appId']
+      .every(k=>typeof firebaseConfig[k]==='string'&&!firebaseConfig[k].includes('__PASTE_'));
   }
 
   function setComposer(enabled){
     if(input)input.disabled=!enabled;
     if(sendBtn)sendBtn.disabled=!enabled;
     if(heartBtn)heartBtn.disabled=!enabled;
-    room.classList.toggle('live',enabled);
-    waiting?.classList.toggle('hidden',enabled);
-    if(enabled){
-      roomState.textContent='live · your private chat is ready';
-      setStatus('live together',true);
-    }else{
-      roomState.textContent='connecting…';
-      setStatus('connecting…',false);
-    }
+    roomEl.classList.toggle('live',enabled);
+    setStatus(enabled?'live together':'connecting…',enabled);
+    setState(enabled?'online · leave a message here anytime':'opening your private chat…');
   }
 
-  async function initFirebase(){
-    if(!validConfig()){
-      setError('One-time setup needed: add the Firebase web config to chat-config.js.');
-      setStatus('setup needed',false);
-      return false;
-    }
-    if(!window.firebase?.apps?.length)firebase.initializeApp(firebaseConfig);
-    auth=firebase.auth();
-    db=firebase.database();
+  function renderMessage(message){
+    if(!messagesEl||!message?.text)return;
+    const wrap=document.createElement('div');
+    wrap.className='softy-chat-bubble-wrap '+(message.senderUid===user?.uid?'me':'them');
 
-    try{
-      if(!auth.currentUser)await auth.signInAnonymously();
-      user=auth.currentUser;
-      return !!user;
-    }catch(error){
-      console.error(error);
-      setError('The private chat backend could not connect. Check the Firebase setup.');
-      setStatus('offline',false);
-      return false;
-    }
+    const bubble=document.createElement('article');
+    bubble.className='softy-chat-bubble';
+
+    const text=document.createElement('p');
+    text.className='softy-chat-text';
+    text.textContent=String(message.text).slice(0,500);
+
+    const time=document.createElement('span');
+    time.className='softy-chat-time';
+    time.textContent=new Date(message.ts||Date.now()).toLocaleTimeString([],{
+      hour:'numeric',minute:'2-digit'
+    });
+
+    bubble.append(text,time);
+    wrap.appendChild(bubble);
+    messagesEl.appendChild(wrap);
   }
 
-  async function attachRoom(){
-    if(!roomId||!roomKey)return;
-    if(!await initFirebase())return;
+  async function renderSnapshot(snapshot){
+    if(!messagesEl)return;
+    messagesEl.innerHTML='';
+    const raw=snapshot.val()||{};
+    const list=Object.values(raw)
+      .filter(x=>x?.type==='message'&&x?.iv&&x?.ciphertext)
+      .sort((a,b)=>Number(a.createdAt||0)-Number(b.createdAt||0))
+      .slice(-200);
 
-    try{
-      cryptoKey=await importRoomKey(roomKey);
-      const ref=roomPath();
-      await ref.child('members').child(user.uid).set(true);
-
-      messagesRef=ref.child('messages');
-      typingRef=ref.child('typing');
-
-      setComposer(false);
-      setStatus('connecting…',false);
-
-      messagesUnsubscribe?.();
-      messagesUnsubscribe=messagesRef.on('value',snapshot=>{
-        renderSnapshot(snapshot);
-      });
-
-      typingUnsubscribe?.();
-      typingUnsubscribe=typingRef.on('value',snapshot=>{
-        const people=snapshot.val()||{};
-        const other=Object.entries(people).some(([uid,value])=>uid!==user.uid&&value===true);
-        typingEl?.classList.toggle('show',other);
-        if(typingEl)typingEl.textContent=other?remoteName+' is typing…':'';
-      });
-
-      await ref.child('presence').child(user.uid).set(true);
-      ref.child('presence').child(user.uid).onDisconnect().remove();
-
-      const profile=await encryptPayload({kind:'profile',name:myName});
-      await ref.child('profiles').child(user.uid).set(profile);
-
-      ref.child('profiles').on('value',async snapshot=>{
-        const profiles=snapshot.val()||{};
-        for(const [uid,packet] of Object.entries(profiles)){
-          if(uid===user.uid||!packet?.ciphertext)continue;
-          try{
-            const data=await decryptPayload(packet);
-            if(data?.name)remoteName=String(data.name).slice(0,18);
-          }catch(_){}
-        }
-      });
-
-      room.removeAttribute('hidden');
-      intro.setAttribute('hidden','');
-      setComposer(true);
-    }catch(error){
-      console.error(error);
-      setComposer(false);
-      setError('The private chat could not open. The invite may be invalid or the database rules may need to be enabled.');
-      setStatus('offline',false);
-    }
-  }
-
-  async function createRoom(){
-    ensureName();
-    setError('');
-
-    if(!window.isSecureContext){
-      setError('Private chat requires the secure HTTPS version of Softy.');
-      return;
-    }
-
-    if(!await initFirebase())return;
-
-    roomId=randomB64(18);
-    roomKey=randomB64(32);
-
-    try{
-      await importRoomKey(roomKey);
-      cryptoKey=await importRoomKey(roomKey);
-      const ref=roomPath();
-      await ref.set({
-        createdAt:firebase.database.ServerValue.TIMESTAMP,
-        members:{[user.uid]:true},
-        presence:{},
-        messages:{},
-        profiles:{}
-      });
-      saveChat();
-      await attachRoom();
-
-      const invite=makeInvite();
+    for(const packet of list){
       try{
-        await navigator.clipboard.writeText(invite);
-        setError('Private link copied. Send it once to her. After that, both devices remember the chat.');
-      }catch(_){
-        setError('Private chat created. Use “share private link” to copy the invite.');
-      }
-      cleanInviteFromAddressBar();
-    }catch(error){
-      console.error(error);
-      setError('The private chat could not be created. Check the Firebase Realtime Database setup.');
+        const message=await decrypt(packet);
+        renderMessage(message);
+      }catch(_){}
     }
-  }
-
-  async function openExisting(roomValue,keyValue){
-    try{
-      roomId=roomValue;
-      roomKey=keyValue;
-      saveChat();
-      await attachRoom();
-      cleanInviteFromAddressBar();
-    }catch(error){
-      console.error(error);
-      setError('That private chat link could not be opened.');
-    }
+    emptyEl?.classList.toggle('hidden',list.length>0);
+    messagesEl.scrollTop=messagesEl.scrollHeight;
   }
 
   async function sendMessage(text){
     const clean=String(text||'').trim().slice(0,500);
-    if(!clean||!messagesRef||!cryptoKey||!user)return;
-    const payload={kind:'message',text:clean,senderUid:user.uid,ts:Date.now()};
-    const encrypted=await encryptPayload(payload);
-    const packet={...encrypted,type:'message',senderUid:user.uid,createdAt:firebase.database.ServerValue.TIMESTAMP};
-    await messagesRef.push(packet);
+    if(!clean||!messagesRef||!user||!cryptoKey)return;
+    const body={type:'message',text:clean,senderUid:user.uid,ts:Date.now()};
+    const enc=await encrypt(body);
+    await messagesRef.push({
+      type:'message',
+      senderUid:user.uid,
+      iv:enc.iv,
+      ciphertext:enc.ciphertext,
+      createdAt:firebase.database.ServerValue.TIMESTAMP
+    });
   }
 
-  startBtn?.addEventListener('click',createRoom);
-
-  restoreBtn?.addEventListener('click',async()=>{
-    const saved=loadSavedChat();
-    if(saved){
-      ensureName();
-      await openExisting(saved.roomId,saved.key);
-    }else{
-      setError('No saved private chat was found on this device.');
+  async function start(){
+    if(!window.isSecureContext){
+      setStatus('HTTPS required',false);
+      setState('Open the secure Softy address to use chat.');
+      return;
     }
-  });
+    if(!validConfig()){
+      setStatus('setup needed',false);
+      setState('The chat backend still needs its Firebase configuration.');
+      return;
+    }
+    if(!window.firebase){
+      setStatus('offline',false);
+      setState('The chat service did not load. Refresh once and try again.');
+      return;
+    }
 
-  shareBtn?.addEventListener('click',async()=>{
-    if(!roomId||!roomKey)return;
-    const invite=makeInvite();
     try{
-      await navigator.clipboard.writeText(invite);
-      setError('Private link copied ♡');
-      setTimeout(()=>setError(''),1800);
-    }catch(_){
-      window.prompt('Copy your private chat link:',invite);
+      if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+      auth=firebase.auth();
+      db=firebase.database();
+      if(!auth.currentUser)await auth.signInAnonymously();
+      user=auth.currentUser;
+
+      cryptoKey=await deriveKey();
+
+      const roomRef=db.ref('softyRooms/'+ROOM_ID);
+      await roomRef.child('meta').set({created:true});
+
+      messagesRef=roomRef.child('messages');
+      typingRef=roomRef.child('typing');
+
+      messageListener=snapshot=>renderSnapshot(snapshot);
+      messagesRef.on('value',messageListener);
+
+      typingListener=snapshot=>{
+        const people=snapshot.val()||{};
+        const other=Object.entries(people).some(([uid,v])=>uid!==user.uid&&v===true);
+        typingEl?.classList.toggle('show',other);
+        if(typingEl)typingEl.textContent=other?'is typing…':'';
+      };
+      typingRef.on('value',typingListener);
+
+      setComposer(true);
+      renderSnapshot(await messagesRef.once('value'));
+    }catch(error){
+      console.error(error);
+      setComposer(false);
+      setStatus('offline',false);
+      setState('The private chat could not connect. Check the chat backend setup.');
     }
-  });
+  }
 
-  forgetBtn?.addEventListener('click',()=>{
-    if(!confirm('Forget this private chat on this device? The cloud messages stay there, but this device will no longer know how to open them.'))return;
-    messagesUnsubscribe?.();
-    typingUnsubscribe?.();
-    try{typingRef?.child(user?.uid).remove()}catch(_){}
-    clearSavedChat();
-    roomId='';roomKey='';cryptoKey=null;
-    clearRendered();
-    setComposer(false);
-    room.setAttribute('hidden','');
-    intro.removeAttribute('hidden');
-    restoreBtn?.setAttribute('hidden','');
-    setStatus('not connected',false);
-    setError('');
-  });
-
-  compose?.addEventListener('submit',async event=>{
-    event.preventDefault();
-    if(!input?.value||input.disabled)return;
+  compose?.addEventListener('submit',async e=>{
+    e.preventDefault();
+    if(input?.disabled)return;
     try{
       await sendMessage(input.value);
       input.value='';
       if(typingRef&&user)await typingRef.child(user.uid).remove();
     }catch(error){
       console.error(error);
-      setError('That message could not be sent. Check your connection and try again.');
+      setState('Message failed to send. Check the connection and try again.');
     }
   });
 
   input?.addEventListener('input',async()=>{
-    if(!typingRef||!user||input.disabled)return;
-    try{
-      await typingRef.child(user.uid).set(true);
-      clearTimeout(typingTimer);
-      typingTimer=setTimeout(()=>typingRef?.child(user.uid).remove(),900);
-    }catch(_){}
+    if(input.disabled||!typingRef||!user)return;
+    try{await typingRef.child(user.uid).set(true);}catch(_){}
+    clearTimeout(typingTimer);
+    typingTimer=setTimeout(()=>typingRef?.child(user.uid).remove(),900);
   });
 
   heartBtn?.addEventListener('click',()=>sendMessage('♡').catch(()=>{}));
 
-  async function boot(){
-    const saved=loadSavedChat();
-    const invite=parseInvite();
-
-    if(nameInput)nameInput.value=myName;
-
-    if(invite.incomingRoom&&invite.incomingKey){
-      restoreBtn?.removeAttribute('hidden');
-      ensureName();
-      await openExisting(invite.incomingRoom,invite.incomingKey);
-      return;
-    }
-
-    if(saved){
-      restoreBtn?.removeAttribute('hidden');
-      ensureName();
-      await openExisting(saved.roomId,saved.key);
-      return;
-    }
-  }
-
   window.addEventListener('beforeunload',()=>{
-    try{typingRef?.child(user?.uid).remove()}catch(_){}
+    try{
+      if(typingRef&&user)typingRef.child(user.uid).remove();
+    }catch(_){}
   });
 
   setComposer(false);
-  setStatus('not connected',false);
-  boot();
+  setStatus('connecting…',false);
+  start();
 })();
