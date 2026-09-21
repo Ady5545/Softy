@@ -626,6 +626,104 @@ document.addEventListener('keydown',e=>{
 window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
 
 
+
+/* ================= GARDEN SCROLL STORY =================
+   The garden blooms progressively as its section is scrolled.
+   This is intentionally isolated from the memory/photo and music systems.
+================================================================ */
+(function gardenScrollStory(){
+  const section=document.getElementById('garden');
+  const canvas=document.getElementById('gardenCanvas');
+  if(!section || !canvas) return;
+
+  const stems=Array.from(canvas.querySelectorAll('.garden-stem'));
+  const blooms=Array.from(canvas.querySelectorAll('.bloom'));
+  if(!stems.length || !blooms.length) return;
+
+  stems.forEach(stem=>{
+    try{
+      const length=stem.getTotalLength();
+      stem.style.strokeDasharray=String(length);
+      stem.style.strokeDashoffset=String(length);
+    }catch(_){
+      stem.style.strokeDasharray='900';
+      stem.style.strokeDashoffset='900';
+    }
+  });
+
+  blooms.forEach(bloom=>{
+    bloom.style.opacity='0';
+    bloom.style.transform='translate(var(--bx), var(--by)) scale(.08)';
+    bloom.style.transformOrigin='center';
+    bloom.style.transformBox='fill-box';
+  });
+
+  function gardenProgress(){
+    const rect=section.getBoundingClientRect();
+    const travel=Math.max(1,rect.height-window.innerHeight);
+    return clamp((window.innerHeight*0.58-rect.top)/travel);
+  }
+
+  function updateGardenStory(){
+    const p=gardenProgress();
+
+    stems.forEach((stem,index)=>{
+      const local=clamp((p-(index*0.16))/0.28);
+      try{
+        const length=stem.getTotalLength();
+        stem.style.strokeDashoffset=String(length*(1-local));
+      }catch(_){}
+      stem.style.opacity=local>0 ? '1' : '.35';
+    });
+
+    blooms.forEach((bloom,index)=>{
+      const start=0.18+(index*0.18);
+      const local=clamp((p-start)/0.16);
+      const eased=local*local*(3-2*local);
+      bloom.style.opacity=String(eased);
+      bloom.style.transformOrigin='center';
+      bloom.style.transform='scale('+String(0.08+(eased*.92))+')';
+    });
+
+    section.classList.toggle('garden-blooming',p>0.04);
+    section.classList.toggle('garden-finished',p>0.9);
+  }
+
+  let raf=0;
+  const schedule=()=>{
+    if(raf) return;
+    raf=requestAnimationFrame(()=>{raf=0;updateGardenStory();});
+  };
+
+  window.addEventListener('scroll',schedule,{passive:true});
+  window.addEventListener('resize',schedule,{passive:true});
+  schedule();
+
+  blooms.forEach((bloom,index)=>{
+    bloom.style.cursor='pointer';
+    bloom.setAttribute('tabindex','0');
+    bloom.setAttribute('role','button');
+    const activate=()=>{
+      bloom.classList.remove('garden-flower-pop');
+      void bloom.offsetWidth;
+      bloom.classList.add('garden-flower-pop');
+      const flowerNames=['a little hello ♡','just because ♡','for your happy days ♡','one more for you ♡'];
+      const existing=document.getElementById('gardenFlowerMessage');
+      if(existing) existing.remove();
+      const note=document.createElement('div');
+      note.id='gardenFlowerMessage';
+      note.className='garden-flower-message';
+      note.textContent=flowerNames[index]||'just for you ♡';
+      section.appendChild(note);
+      window.setTimeout(()=>note.remove(),1800);
+    };
+    bloom.addEventListener('click',activate);
+    bloom.addEventListener('keydown',e=>{
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();activate();}
+    });
+  });
+})();
+
 /* ================= SOFTY FINAL INTERACTION REPAIR =================
    This pass intentionally overrides the earlier experimental scroll/photo/music
    implementations instead of stacking another dependency on top of them.
