@@ -49,7 +49,7 @@
   </details>
 
   
-  <aside class="softy-chat" id="softyChat" aria-label="Private live chat">
+  <aside class="softy-chat" id="softyChat" aria-label="Private chat">
     <button class="softy-chat-fab" id="softyChatFab" type="button" aria-expanded="false" aria-controls="softyChatPanel">
       <span class="softy-chat-fab-icon">♡</span>
       <span class="softy-chat-fab-label">chat</span>
@@ -72,70 +72,56 @@
       <div class="softy-chat-body">
         <div class="softy-chat-intro" id="softyChatIntro">
           <div class="softy-chat-intro-heart">♡</div>
-          <h3>A tiny chat, just for you two.</h3>
-          <p>Pick a name, make a private room, and share the code. The other person joins with the same code.</p>
+          <h3>Just the two of you.</h3>
+          <p>No login. No room codes. Your chat gets one private invite link, then it remembers the room on each device.</p>
 
           <label class="softy-chat-name-field">
-            <span>your display name</span>
-            <input id="softyChatName" type="text" maxlength="18" autocomplete="nickname" placeholder="e.g. Aadyant" />
+            <span>your name</span>
+            <input id="softyChatName" type="text" maxlength="18" autocomplete="nickname" placeholder="your name" />
           </label>
 
-          <div class="softy-chat-choice-grid">
-            <button class="softy-chat-choice softy-chat-choice-primary" id="softyChatCreate" type="button">
-              <span class="choice-icon">＋</span>
-              <strong>create a room</strong>
-              <small>get a code to share</small>
-            </button>
-            <button class="softy-chat-choice" id="softyChatShowJoin" type="button">
-              <span class="choice-icon">↗</span>
-              <strong>join a room</strong>
-              <small>use a 6-character code</small>
-            </button>
-          </div>
+          <button class="softy-chat-primary softy-chat-start" id="softyChatStart" type="button">
+            start our private chat
+          </button>
 
-          <div class="softy-chat-join-box" id="softyChatJoinBox" hidden>
-            <label class="softy-chat-name-field">
-              <span>room code</span>
-              <input id="softyChatRoomCodeInput" type="text" inputmode="text" maxlength="6" autocomplete="off" placeholder="e.g. K7P2Q9" />
-            </label>
-            <button class="softy-chat-primary" id="softyChatJoin" type="button">join the room →</button>
-          </div>
+          <button class="softy-chat-secondary softy-chat-restore" id="softyChatRestore" type="button" hidden>
+            I already have our private link
+          </button>
 
-          <p class="softy-chat-footnote">Messages are sent live between the two connected pages. No account is needed.</p>
+          <p class="softy-chat-footnote">Your messages are encrypted in the browser before they are stored. The chat needs a private invite link once; there is no password or login.</p>
           <p class="softy-chat-error" id="softyChatError" role="alert"></p>
         </div>
 
         <div class="softy-chat-room" id="softyChatRoom" hidden>
           <div class="softy-chat-room-card">
             <div>
-              <span class="eyebrow">your room</span>
-              <strong id="softyChatRoomCodeDisplay">------</strong>
-              <small id="softyChatRoomState">waiting for the other person…</small>
+              <span class="eyebrow">our private chat</span>
+              <strong id="softyChatRoomTitle">just us ♡</strong>
+              <small id="softyChatRoomState">connecting…</small>
             </div>
             <div class="softy-chat-room-actions">
-              <button class="softy-chat-copy" id="softyChatCopy" type="button">copy code</button>
-              <button class="softy-chat-leave" id="softyChatLeave" type="button">leave</button>
+              <button class="softy-chat-copy" id="softyChatShare" type="button">share private link</button>
+              <button class="softy-chat-leave" id="softyChatForget" type="button">forget</button>
             </div>
           </div>
 
           <div class="softy-chat-waiting" id="softyChatWaiting">
             <span class="waiting-orbit">♡</span>
             <div>
-              <strong>Send them this code.</strong>
-              <p>Once they join, this area becomes your live conversation.</p>
+              <strong>One tiny setup.</strong>
+              <p>Share the private link once. After that, both devices can simply open Softy and the chat stays here.</p>
             </div>
           </div>
 
           <div class="softy-chat-messages" id="softyChatMessages" aria-live="polite" aria-label="Chat messages"></div>
-
           <div class="softy-chat-typing" id="softyChatTyping" aria-live="polite" aria-hidden="true"></div>
 
           <form class="softy-chat-compose" id="softyChatCompose">
-            <button class="softy-chat-heart" id="softyChatHeart" type="button" aria-label="Send a heart">♡</button>
+            <button class="softy-chat-heart" id="softyChatHeart" type="button" aria-label="Send a heart" disabled>♡</button>
             <input id="softyChatInput" type="text" maxlength="500" autocomplete="off" placeholder="write something sweet..." aria-label="Message" disabled />
             <button class="softy-chat-send" type="submit" aria-label="Send message" disabled>↑</button>
           </form>
-          <p class="softy-chat-live-note">live together · direct connection · not stored on a server</p>
+          <p class="softy-chat-live-note">encrypted on your device · saved for both of you</p>
         </div>
       </div>
     </section>
@@ -407,7 +393,10 @@
   <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
   <footer class="site-footer">softy · a private little corner ♡</footer>
-  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-database-compat.js"></script>
+  <script src="chat-config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
