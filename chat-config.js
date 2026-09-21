@@ -1,0 +1,9 @@
+window.SOFTY_FIREBASE_CONFIG = {
+  apiKey: "__PASTE_FIREBASE_API_KEY__",
+  authDomain: "__PASTE_FIREBASE_AUTH_DOMAIN__",
+  databaseURL: "__PASTE_FIREBASE_DATABASE_URL__",
+  projectId: "__PASTE_FIREBASE_PROJECT_ID__",
+  storageBucket: "__PASTE_FIREBASE_STORAGE_BUCKET__",
+  messagingSenderId: "__PASTE_FIREBASE_MESSAGING_SENDER_ID__",
+  appId: "__PASTE_FIREBASE_APP_ID__"
+};
