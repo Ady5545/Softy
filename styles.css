@@ -252,3 +252,18 @@ body{--scroll-y:0px}
   .memory-scene{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding-top:80px}
   .memory-story-copy{z-index:10}
 }
+
+/* stability + heart cursor pass */
+body.modal-open{overflow:hidden}
+.memory-story-sticky{isolation:isolate}
+.memory-scene{contain:layout paint}
+.story-photo{transform-origin:center center;will-change:transform,opacity,filter}
+.heart-cursor{display:block!important;z-index:1000!important;will-change:left,top;font-size:22px;line-height:1;text-shadow:0 4px 12px rgba(216,27,96,.24)}
+.garden-stem,.bloom path{vector-effect:non-scaling-stroke}
+@media(prefers-reduced-motion:reduce){
+  .scroll-story{height:220vh!important}
+  .story-sticky{position:sticky!important;height:100vh!important;padding:0!important}
+  .memory-scrollytelling{height:460vh!important}
+  .memory-story-sticky{position:sticky!important;height:100vh!important}
+  .story-photo{transition:none!important}
+}
