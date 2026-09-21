@@ -142,3 +142,61 @@ document.getElementById('visitCount').textContent=visitCount;
 document.querySelectorAll('#surpriseBtn,#messageButton,.open-card,#newBouquet,#letterButton').forEach(el=>{
   el.addEventListener('click',bumpSurpriseCount);
 });
+
+
+/* Scroll-driven editorial sequence */
+const progressBar=document.getElementById('scrollProgress');
+const story=document.querySelector('.scroll-story');
+const storyFlower=document.querySelector('.story-flower');
+const orbitOne=document.querySelector('.orbit-one');
+const orbitTwo=document.querySelector('.orbit-two');
+const storyCopy=document.querySelector('.story-copy');
+const storyTitle=document.getElementById('storyTitle');
+const storyText=document.getElementById('storyText');
+const storyNumber=document.getElementById('storyNumber');
+const storySteps=[
+  ['It starts<br><em>with a feeling.</em>','Scroll slowly. The page will carry the story forward with you.'],
+  ['Then it becomes<br><em>a little memory.</em>','Small moments deserve a place that feels as considered as the memories themselves.'],
+  ['Then a collection of<br><em>little things.</em>','Words, photographs, music and details — all in one quiet corner.'],
+  ['And it keeps becoming<br><em>more yours.</em>','This is only the beginning.']
+];
+function clamp(v,a=0,b=1){return Math.min(b,Math.max(a,v))}
+function updateScrollMotion(){
+  const y=window.scrollY;
+  const max=document.documentElement.scrollHeight-window.innerHeight;
+  progressBar.style.width=(max?y/max*100:0)+'%';
+  document.querySelector('.topbar').classList.toggle('scrolled',y>80);
+  if(story){
+    const rect=story.getBoundingClientRect();
+    const p=clamp(-rect.top/(rect.height-window.innerHeight));
+    const eased=p*p*(3-2*p);
+    const step=Math.min(3,Math.floor(p*4));
+    const local=(p*4)%1;
+    storyFlower.style.transform='translate(-50%,-50%) rotate('+(p*280)+'deg) scale('+(1+.45*Math.sin(p*Math.PI))+')';
+    storyFlower.style.left=(50+Math.sin(p*Math.PI*2)*23)+'%';
+    storyFlower.style.top=(50+Math.cos(p*Math.PI*2)*13)+'%';
+    orbitOne.style.transform='translate(-50%,-50%) rotate('+(p*180)+'deg) scale('+(1+.22*p)+')';
+    orbitTwo.style.transform='translate(-50%,-50%) rotate('+(-p*120)+'deg) scale('+(1-.18*p)+')';
+    storyCopy.style.transform='translateY('+(Math.sin(p*Math.PI*4)*14)+'px)';
+    storyCopy.style.opacity=String(.72+.28*Math.sin(p*Math.PI));
+    if(p>.03){
+      storyTitle.innerHTML=storySteps[step][0];
+      storyText.textContent=storySteps[step][1];
+      storyNumber.textContent=String(step+1).padStart(2,'0');
+    }
+  }
+}
+let scrollTick=false;
+window.addEventListener('scroll',()=>{if(!scrollTick){requestAnimationFrame(()=>{updateScrollMotion();scrollTick=false});scrollTick=true}},{passive:true});
+updateScrollMotion();
+
+/* Subtle pointer light — restrained, not game-like */
+const cursorGlow=document.getElementById('cursorGlow');
+if(window.matchMedia('(pointer:fine)').matches){
+  window.addEventListener('pointermove',e=>{cursorGlow.style.left=e.clientX+'px';cursorGlow.style.top=e.clientY+'px';cursorGlow.style.opacity='.75'});
+}
+
+/* Music corner shell — real audio files can be added when titles are supplied */
+const musicPlayer=document.getElementById('musicPlayer');
+document.getElementById('playerToggle').addEventListener('click',()=>musicPlayer.classList.toggle('open'));
+document.getElementById('playerClose').addEventListener('click',()=>musicPlayer.classList.remove('open'));
