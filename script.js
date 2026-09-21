@@ -301,7 +301,7 @@ function seeded(i,salt){
   return x-Math.floor(x);
 }
 function photoCandidates(name){
-  return [encodeURI(name),'assets/photos/'+encodeURI(name)];
+  return ['/assets/photos/'+encodeURIComponent(name)];
 }
 function setPhotoSource(img,name){
   const candidates=photoCandidates(name);
@@ -388,13 +388,28 @@ const photoModalImage=document.getElementById('photoModalImage');
 const photoModalCaption=document.getElementById('photoModalCaption');
 function openPhotoModal(index){
   lightboxIndex=(index+photoNames.length)%photoNames.length;
-  const name=photoNames[lightboxIndex];
+
+  const card=document.querySelector('.story-photo[data-index="'+lightboxIndex+'"]');
+  const source=card?.querySelector('img')?.currentSrc || card?.querySelector('img')?.src;
+
   if(photoModalImage){
-    setPhotoSource(photoModalImage,name);
+    if(source){
+      photoModalImage.src=source;
+    }else{
+      setPhotoSource(photoModalImage,photoNames[lightboxIndex]);
+    }
     photoModalImage.alt='Memory '+String(lightboxIndex+1);
   }
-  if(photoModalCaption) photoModalCaption.textContent='memory '+String(lightboxIndex+1).padStart(2,'0')+' / '+String(photoNames.length).padStart(2,'0');
-  if(photoModal){photoModal.classList.add('open');photoModal.setAttribute('aria-hidden','false');document.body.classList.add('modal-open');}
+
+  if(photoModalCaption){
+    photoModalCaption.textContent='memory '+String(lightboxIndex+1).padStart(2,'0')+' / '+String(photoNames.length).padStart(2,'0');
+  }
+
+  if(photoModal){
+    photoModal.classList.add('open');
+    photoModal.setAttribute('aria-hidden','false');
+    document.body.classList.add('modal-open');
+  }
 }
 function closePhotoModal(){
   if(!photoModal) return;
@@ -497,7 +512,7 @@ function loadTrack(index,autoplay=false){
   if(trackArtist) trackArtist.textContent='shuffle · '+String(trackIndex+1)+' / '+String(queue.length);
   audio.muted=false;
   mutedAutoplayFallback=false;
-  audio.src='https://vpl0zcyuaj7poz7d.public.blob.vercel-storage.com/'+encodeURIComponent(file);
+  audio.src='/assets/music/'+encodeURIComponent(file);
   audio.load();
   if(playerProgress) playerProgress.style.width='0%';
   if(currentTime) currentTime.textContent='0:00';
