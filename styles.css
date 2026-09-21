@@ -1839,3 +1839,65 @@ body.modal-open{overflow:hidden}
   .softy-chat-copy{padding:0 8px}
   .softy-chat-leave{padding:0 8px}
 }
+
+
+/* ===== private persistent chat ===== */
+.softy-chat-primary.softy-chat-start{
+  width:100%;
+  min-height:48px;
+  margin-top:4px;
+}
+.softy-chat-secondary.softy-chat-restore{
+  width:100%;
+  min-height:42px;
+  margin-top:9px;
+}
+.softy-chat-restore[hidden]{display:none!important}
+.softy-chat-intro[hidden],
+.softy-chat-room[hidden]{display:none!important}
+.softy-chat-room{
+  display:flex!important;
+}
+.softy-chat-room-card{
+  align-items:flex-start;
+}
+.softy-chat-room-card strong{
+  letter-spacing:.02em;
+}
+.softy-chat-room-card small{
+  display:block;
+  max-width:210px;
+  margin-top:5px;
+  color:#9b818c;
+  font-size:10px;
+  line-height:1.35;
+}
+.softy-chat-room-actions{
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+.softy-chat-waiting.hidden{
+  display:none!important;
+}
+.softy-chat-room.live .softy-chat-waiting{
+  display:none;
+}
+.softy-chat-room.live .softy-chat-room-card small{
+  color:#7d345a;
+}
+.softy-chat-room.live .softy-chat-room-card small:before{
+  content:'● ';
+  color:#d81b60;
+}
+.softy-chat-copy{
+  white-space:nowrap;
+}
+.softy-chat-forgotten{
+  opacity:.9;
+}
+@media(max-width:560px){
+  .softy-chat-room-actions{gap:4px}
+  .softy-chat-copy{padding:0 8px;font-size:9px}
+  .softy-chat-leave{padding:0 8px}
+}
