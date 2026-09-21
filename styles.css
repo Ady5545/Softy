@@ -833,3 +833,74 @@ body.modal-open{overflow:hidden}
 .softy-story-card.is-active{
   opacity:1!important;
 }
+
+/* ===== garden scrollytelling final polish ===== */
+#garden.garden-section{
+  min-height:220vh!important;
+  overflow:visible!important;
+  position:relative!important;
+}
+#garden .garden-heading{
+  position:sticky!important;
+  top:90px!important;
+  z-index:5!important;
+  width:min(680px,92vw)!important;
+}
+#garden .garden-canvas{
+  position:sticky!important;
+  top:180px!important;
+  z-index:4!important;
+  height:560px!important;
+  margin-top:18vh!important;
+  overflow:visible!important;
+}
+#garden .garden-svg{
+  overflow:visible!important;
+}
+#garden .garden-stem{
+  opacity:.35;
+  transition:stroke-dashoffset .12s linear,opacity .2s ease;
+}
+#garden .bloom{
+  transition:opacity .2s ease,transform .24s cubic-bezier(.16,1,.3,1);
+  transform-origin:center;
+  transform-box:fill-box;
+}
+#garden .garden-flower-pop{
+  animation:gardenFlowerPop .65s cubic-bezier(.16,1,.3,1);
+}
+.garden-flower-message{
+  position:fixed;
+  left:50%;
+  bottom:34px;
+  z-index:12000;
+  transform:translateX(-50%);
+  padding:10px 15px;
+  border:1px solid rgba(164,19,79,.12);
+  border-radius:999px;
+  background:rgba(255,255,255,.9);
+  box-shadow:0 14px 35px rgba(67,21,43,.12);
+  color:var(--amaranth);
+  font-family:var(--serif);
+  font-style:italic;
+  pointer-events:none;
+  animation:gardenMessageIn .22s ease both;
+}
+@keyframes gardenFlowerPop{
+  0%{transform:scale(1)}
+  45%{transform:scale(1.18)}
+  100%{transform:scale(1)}
+}
+@keyframes gardenMessageIn{
+  from{opacity:0;transform:translateX(-50%) translateY(8px)}
+  to{opacity:1;transform:translateX(-50%) translateY(0)}
+}
+@media(max-width:800px){
+  #garden.garden-section{min-height:190vh!important}
+  #garden .garden-heading{top:72px!important}
+  #garden .garden-canvas{top:150px!important;height:420px!important;margin-top:14vh!important}
+}
+@media(max-width:560px){
+  #garden.garden-section{min-height:175vh!important}
+  #garden .garden-canvas{top:132px!important;height:310px!important;margin-top:12vh!important}
+}
