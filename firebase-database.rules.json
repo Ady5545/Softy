@@ -1,0 +1,37 @@
+{
+  "rules": {
+    "softyRooms": {
+      "$roomId": {
+        ".read": "auth != null && data.child('members').child(auth.uid).val() === true",
+        ".write": "auth != null && !data.exists() && newData.child('members').child(auth.uid).val() === true",
+        "members": {
+          "$uid": {
+            ".write": "auth != null && $uid === auth.uid && newData.val() === true",
+            ".validate": "newData.val() === true"
+          }
+        },
+        "messages": {
+          "$messageId": {
+            ".write": "auth != null && root.child('softyRooms').child($roomId).child('members').child(auth.uid).val() === true && newData.child('senderUid').val() === auth.uid",
+            ".validate": "newData.hasChildren(['type','iv','ciphertext','senderUid','createdAt']) && newData.child('type').val() === 'message' && newData.child('iv').isString() && newData.child('ciphertext').isString() && newData.child('senderUid').isString()"
+          }
+        },
+        "typing": {
+          "$uid": {
+            ".write": "auth != null && $uid === auth.uid && root.child('softyRooms').child($roomId).child('members').child(auth.uid).val() === true"
+          }
+        },
+        "presence": {
+          "$uid": {
+            ".write": "auth != null && $uid === auth.uid && root.child('softyRooms').child($roomId).child('members').child(auth.uid).val() === true"
+          }
+        },
+        "profiles": {
+          "$uid": {
+            ".write": "auth != null && $uid === auth.uid && root.child('softyRooms').child($roomId).child('members').child(auth.uid).val() === true"
+          }
+        }
+      }
+    }
+  }
+}
