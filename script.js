@@ -511,65 +511,44 @@ function loadTrack(index,autoplay=false){
   if(trackTitle) trackTitle.textContent=title || 'Music corner';
   if(trackArtist) trackArtist.textContent='shuffle · '+String(trackIndex+1)+' / '+String(queue.length);
   audio.muted=false;
-  mutedAutoplayFallback=false;
-  audio.src='https://vpl0zcyuaj7poz7d.public.blob.vercel-storage.com/'+encodeURIComponent(file);
+  audio.src='https://media.githubusercontent.com/media/Ady5545/Softy/main/assets/music/'+encodeURIComponent(file);
   audio.load();
   if(playerProgress) playerProgress.style.width='0%';
   if(currentTime) currentTime.textContent='0:00';
   if(duration) duration.textContent='0:00';
   if(playButton) playButton.textContent='▶';
-  if(autoplay) attemptPlay();
+  if(autoplay) playCurrentTrack();
 }
 
-function attemptPlay(){
-  audio.muted=false;
-  return audio.play().then(()=>{
-    soundUnlocked=true;
-    mutedAutoplayFallback=false;
+async function playCurrentTrack(){
+  try{
+    audio.muted=false;
+    await audio.play();
     if(playButton) playButton.textContent='Ⅱ';
     if(trackArtist) trackArtist.textContent='shuffle · '+String(trackIndex+1)+' / '+String(queue.length);
-  }).catch(()=>{
-    if(musicProblem) return;
-    mutedAutoplayFallback=true;
-    audio.muted=true;
-    audio.play().then(()=>{
-      if(playButton) playButton.textContent='Ⅱ';
-      if(trackArtist) trackArtist.textContent='playing quietly · tap once for sound ♡';
-    }).catch(()=>{
-      if(trackArtist) trackArtist.textContent='tap play to start your music ♡';
-    });
-  });
+  }catch(error){
+    musicProblem=true;
+    if(playButton) playButton.textContent='▶';
+    if(trackArtist) trackArtist.textContent='tap play again to start the song';
+    console.warn('Softy audio playback failed',error);
+  }
 }
 
-function unlockSound(){
-  if(soundUnlocked || musicProblem) return;
-  soundUnlocked=true;
-  audio.muted=false;
-  audio.play().then(()=>{
-    mutedAutoplayFallback=false;
-    if(playButton) playButton.textContent='Ⅱ';
-    if(trackArtist) trackArtist.textContent='shuffle · '+String(trackIndex+1)+' / '+String(queue.length);
-  }).catch(()=>{});
-}
+loadTrack(0,false);
 
-loadTrack(0,true);
-window.addEventListener('pointerdown',unlockSound,{once:true,passive:true});
-window.addEventListener('touchstart',unlockSound,{once:true,passive:true});
-window.addEventListener('keydown',unlockSound,{once:true});
-
-if(playButton) playButton.addEventListener('click',()=>{
-  if(audio.paused || audio.muted){
-    unlockSound();
-    attemptPlay();
-  } else {
+if(playButton) playButton.addEventListener('click',async()=>{
+  if(!audio.src) loadTrack(0,false);
+  if(audio.paused){
+    await playCurrentTrack();
+  }else{
     audio.pause();
   }
 });
 
 const prevTrack=document.getElementById('prevTrack');
 const nextTrack=document.getElementById('nextTrack');
-if(prevTrack) prevTrack.addEventListener('click',()=>loadTrack(trackIndex-1,true));
-if(nextTrack) nextTrack.addEventListener('click',()=>loadTrack(trackIndex+1,true));
+if(prevTrack) prevTrack.addEventListener('click',async()=>{ loadTrack(trackIndex-1,false); await playCurrentTrack(); });
+if(nextTrack) nextTrack.addEventListener('click',async()=>{ loadTrack(trackIndex+1,false); await playCurrentTrack(); });
 audio.addEventListener('loadedmetadata',()=>{if(duration) duration.textContent=fmt(audio.duration)});
 audio.addEventListener('timeupdate',()=>{
   const pct=audio.duration?audio.currentTime/audio.duration*100:0;
@@ -582,7 +561,7 @@ audio.addEventListener('pause',()=>{if(playButton) playButton.textContent='▶'}
 audio.addEventListener('error',()=>{
   musicProblem=true;
   if(playButton) playButton.textContent='▶';
-  if(trackArtist) trackArtist.textContent='music file could not be loaded · check the Blob copy';
+  if(trackArtist) trackArtist.textContent='song file could not be loaded · Git LFS asset unavailable';
 });
 if(playerProgressBar) playerProgressBar.addEventListener('click',e=>{
   if(!Number.isFinite(audio.duration)) return;
