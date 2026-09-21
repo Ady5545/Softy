@@ -233,7 +233,6 @@ function updateGlobalScroll(){
   if(progressBar) progressBar.style.width=(y/max*100)+'%';
   const topbar=document.querySelector('.topbar');
   if(topbar) topbar.classList.toggle('scrolled',y>80);
-  updateMemoryStory();
 }
 let scrollTick=false;
 window.addEventListener('scroll',()=>{
