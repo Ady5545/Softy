@@ -108,10 +108,21 @@ if(messageButton) messageButton.addEventListener('click',()=>showMessage(jarMess
 const letterButton=document.getElementById('letterButton');
 if(letterButton) letterButton.addEventListener('click',()=>{openModal('letterModal');bumpSurpriseCount()});
 
-qsa('[data-close]').forEach(el=>el.addEventListener('click',()=>{
+qsa('[data-close]').forEach(el=>el.addEventListener('click',event=>{
+  event.preventDefault();
+  event.stopPropagation();
   const type=el.dataset.close;
   if(type) closeModal(type+'Modal');
 }));
+const unlockClose=document.getElementById('unlockClose');
+if(unlockClose) unlockClose.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();closeModal('unlockModal');});
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){
+    document.querySelectorAll('.modal.open').forEach(modal=>closeModal(modal.id));
+    closePhotoModal();
+    if(musicPlayer) musicPlayer.classList.remove('open');
+  }
+});
 
 qsa('.open-card').forEach(card=>card.addEventListener('click',()=>{
   const messages={
@@ -386,44 +397,20 @@ function buildMemoryStory(){
 }
 
 function updateMemoryStory(){
-  if(!memoryStorySection||!memoryScene) return;
-  const p=pageProgress(memoryStorySection);
+  if(!memoryScene) return;
   const cards=qsa('.story-photo',memoryScene);
   if(!cards.length) return;
-  const center=p*(cards.length-1);
-  const dealProgress=clamp(p/.72);
-
   cards.forEach((card,index)=>{
-    const baseScale=parseFloat(card.style.getPropertyValue('--base-scale')||'1');
-    const baseX=parseFloat((card.style.left||'50').replace('vw',''))||50;
-    const baseY=parseFloat((card.style.top||'50').replace('vh',''))||50;
-    const start=(index/cards.length)*.62;
-    const local=clamp((dealProgress-start)/.38);
-    const ease=local*local*(3-2*local);
-    const driftX=Math.sin((index+1)*.73+p*Math.PI*2)*.5;
-    const driftY=Math.cos((index+1)*.51+p*Math.PI*2)*.5;
-    const fromX=(50-baseX)*ease;
-    const fromY=(50-baseY)*ease;
-    const isActive=Math.abs(index-center)<.55 && p>.12;
-    const scale=(.42+(0.58*ease))*baseScale*(isActive?1.14:1);
-    card.style.opacity=String(.12+.88*ease);
+    if(!card.style.getPropertyValue('--photo-x')){
+      const x=8+((index*37)%84);
+      const y=12+((index*53)%76);
+      card.style.setProperty('--photo-x',x+'%');
+      card.style.setProperty('--photo-y',y+'%');
+    }
+    card.style.opacity='1';
     card.style.filter='none';
-    card.style.transform='translate3d('+((1-ease)*fromX+driftX).toFixed(2)+'vw,'+((1-ease)*fromY+driftY).toFixed(2)+'vh,0) rotate(var(--rotation)) scale('+scale.toFixed(3)+')';
-    card.style.zIndex=String(10+index+(isActive?300:0));
-    card.classList.toggle('is-active',isActive);
+    card.classList.remove('is-active');
   });
-
-  const chapter=Math.min(memoryStory.length-1,Math.floor(p*memoryStory.length));
-  const stageCopy=memoryStory[chapter];
-  if(memoryStoryTitle) memoryStoryTitle.innerHTML=stageCopy[0]+'<br><em>'+stageCopy[1]+'</em>';
-  if(memoryStoryText) memoryStoryText.textContent=stageCopy[2];
-  if(memoryStoryNumber) memoryStoryNumber.textContent=String(Math.min(cards.length,Math.floor(center)+1)).padStart(2,'0');
-  if(memoryStoryCopy){
-    memoryStoryCopy.style.transform='translateY('+(Math.sin(p*Math.PI*4)*7)+'px) scale('+(1-clamp((p-.84)/.16)*.03)+')';
-    memoryStoryCopy.style.opacity=String(p>.86?.2:1);
-  }
-  if(memoryStorySticky) memoryStorySticky.classList.toggle('is-finale',p>.82);
-  if(memoryStoryFinale) memoryStoryFinale.style.opacity=String(clamp((p-.82)/.18));
 }
 buildMemoryStory();
 requestAnimationFrame(()=>updateMemoryStory());
@@ -614,7 +601,6 @@ audio.addEventListener('timeupdate',()=>{
 });
 audio.addEventListener('play',()=>{if(playButton) playButton.textContent='Ⅱ'});
 audio.addEventListener('pause',()=>{if(playButton) playButton.textContent='▶'});
-audio.addEventListener('ended',()=>loadTrack(trackIndex+1,true));
 audio.addEventListener('error',()=>{
   musicProblem=true;
   if(playButton) playButton.textContent='▶';
@@ -628,8 +614,22 @@ if(playerProgressBar) playerProgressBar.addEventListener('click',e=>{
 const musicPlayer=document.getElementById('musicPlayer');
 const playerToggle=document.getElementById('playerToggle');
 const playerClose=document.getElementById('playerClose');
-if(playerToggle) playerToggle.addEventListener('click',()=>musicPlayer&&musicPlayer.classList.toggle('open'));
-if(playerClose) playerClose.addEventListener('click',()=>musicPlayer&&musicPlayer.classList.remove('open'));
+function setMusicOpen(open){
+  if(!musicPlayer) return;
+  musicPlayer.classList.toggle('open',open);
+  if(playerToggle) playerToggle.setAttribute('aria-expanded',open?'true':'false');
+}
+if(playerToggle){
+  playerToggle.addEventListener('click',event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    setMusicOpen(!musicPlayer.classList.contains('open'));
+  });
+}
+if(playerClose) playerClose.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();setMusicOpen(false);});
+audio.addEventListener('play',()=>{musicPlayer?.classList.add('playing');});
+audio.addEventListener('pause',()=>{musicPlayer?.classList.remove('playing');});
+audio.addEventListener('ended',()=>{musicPlayer?.classList.remove('playing');loadTrack(trackIndex+1,true);});
 
 document.addEventListener('keydown',e=>{
   if(e.key==='ArrowLeft'&&photoModal?.classList.contains('open')) stepPhoto(-1);
