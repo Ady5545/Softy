@@ -120,7 +120,7 @@ document.addEventListener('keydown',event=>{
   if(event.key==='Escape'){
     document.querySelectorAll('.modal.open').forEach(modal=>closeModal(modal.id));
     closePhotoModal();
-    if(musicPlayer) musicPlayer.classList.remove('open');
+    if(musicPlayer) musicPlayer.open=false;
   }
 });
 
@@ -484,12 +484,12 @@ function shuffle(items){
   return arr;
 }
 const queue=shuffle(playlist);
-const audio=document.createElement('audio');
+const audio=document.getElementById('softyAudio') || document.createElement('audio');
 audio.preload='auto';
-audio.autoplay=true;
+audio.autoplay=false;
 audio.playsInline=true;
 audio.setAttribute('aria-hidden','true');
-document.body.appendChild(audio);
+if(!audio.isConnected) document.body.appendChild(audio);
 let trackIndex=0;
 let musicProblem=false;
 let soundUnlocked=false;
@@ -508,11 +508,11 @@ function loadTrack(index,autoplay=false){
   trackIndex=(index+queue.length)%queue.length;
   const [title,file]=queue[trackIndex];
   musicProblem=false;
-  if(trackTitle) trackTitle.textContent=title;
+  if(trackTitle) trackTitle.textContent=title || 'Music corner';
   if(trackArtist) trackArtist.textContent='shuffle · '+String(trackIndex+1)+' / '+String(queue.length);
   audio.muted=false;
   mutedAutoplayFallback=false;
-  audio.src='/assets/music/'+encodeURIComponent(file);
+  audio.src='https://vpl0zcyuaj7poz7d.public.blob.vercel-storage.com/'+encodeURIComponent(file);
   audio.load();
   if(playerProgress) playerProgress.style.width='0%';
   if(currentTime) currentTime.textContent='0:00';
@@ -582,7 +582,7 @@ audio.addEventListener('pause',()=>{if(playButton) playButton.textContent='▶'}
 audio.addEventListener('error',()=>{
   musicProblem=true;
   if(playButton) playButton.textContent='▶';
-  if(trackArtist) trackArtist.textContent='audio file missing · add it to assets/music/';
+  if(trackArtist) trackArtist.textContent='music file could not be loaded · check the Blob copy';
 });
 if(playerProgressBar) playerProgressBar.addEventListener('click',e=>{
   if(!Number.isFinite(audio.duration)) return;
@@ -592,28 +592,16 @@ if(playerProgressBar) playerProgressBar.addEventListener('click',e=>{
 const musicPlayer=document.getElementById('musicPlayer');
 const playerToggle=document.getElementById('playerToggle');
 const playerClose=document.getElementById('playerClose');
-function setMusicOpen(open){
-  if(!musicPlayer) return;
-  musicPlayer.classList.toggle('open',open);
-  if(playerToggle) playerToggle.setAttribute('aria-expanded',open?'true':'false');
+if(musicPlayer){
+  musicPlayer.addEventListener('toggle',()=>{
+    const open=musicPlayer.open;
+    if(playerToggle) playerToggle.setAttribute('aria-expanded',open?'true':'false');
+  });
 }
-if(playerToggle){
-  playerToggle.onclick=event=>{
-    event.preventDefault();
-    event.stopPropagation();
-    setMusicOpen(!musicPlayer.classList.contains('open'));
-  };
-  playerToggle.onpointerdown=event=>{
-    event.preventDefault();
-    event.stopPropagation();
-    setMusicOpen(!musicPlayer.classList.contains('open'));
-  };
-}
-if(playerClose) playerClose.onclick=event=>{
+if(playerClose) playerClose.addEventListener('click',event=>{
   event.preventDefault();
-  event.stopPropagation();
-  setMusicOpen(false);
-};
+  if(musicPlayer) musicPlayer.open=false;
+});
 audio.addEventListener('play',()=>{musicPlayer?.classList.add('playing');});
 audio.addEventListener('pause',()=>{musicPlayer?.classList.remove('playing');});
 audio.addEventListener('ended',()=>{musicPlayer?.classList.remove('playing');loadTrack(trackIndex+1,true);});
