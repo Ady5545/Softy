@@ -226,31 +226,49 @@ function updateVisualStory(){
   const orbitTwo=section.querySelector('.orbit-two');
   const chapters=qsa('.story-chapter',section);
   if(flower){
-    const scale=.72+p*.5;
-    const rotate=-8+p*20;
+    const scale=.82+p*.34;
+    const rotate=-6+p*16;
     flower.style.transform='translate(-50%,-50%) scale('+scale.toFixed(3)+') rotate('+rotate.toFixed(2)+'deg)';
-    flower.style.opacity=String(.55+p*.45);
+    flower.style.opacity=String(.7+p*.3);
   }
-  if(orbitOne) orbitOne.style.transform='translate(-50%,-50%) rotate('+(p*130).toFixed(2)+'deg) scale('+(1+p*.08).toFixed(3)+')';
-  if(orbitTwo) orbitTwo.style.transform='translate(-50%,-50%) rotate('+(-p*90).toFixed(2)+'deg) scale('+(1-p*.06).toFixed(3)+')';
-  if(visual){
-    visual.style.background='radial-gradient(circle at '+(50+p*18)+'% '+(45-p*8)+'%,#fff 0,#fff7fa 48%,var(--cream) 100%)';
-  }
+  if(orbitOne) orbitOne.style.transform='translate(-50%,-50%) rotate('+(p*120).toFixed(2)+'deg) scale('+(1+p*.06).toFixed(3)+')';
+  if(orbitTwo) orbitTwo.style.transform='translate(-50%,-50%) rotate('+(-p*80).toFixed(2)+'deg) scale('+(1-p*.04).toFixed(3)+')';
+  if(visual) visual.style.background='radial-gradient(circle at '+(50+p*10)+'% '+(46-p*5)+'%,#fff 0,#fff7fa 55%,var(--cream) 100%)';
   chapters.forEach((chapter,i)=>{
     const center=(i+.5)/chapters.length;
     const dist=Math.abs(p-center);
-    const active=dist<.34;
-    const fade=clamp(1-dist/.42);
+    const active=dist<.125;
+    const fade=clamp(1-dist/.22);
     const card=chapter.querySelector('.story-card');
     if(card){
-      const direction=i===1?-1:i===2?1:0;
-      const y=(1-fade)*55;
-      const x=direction*(1-fade)*70;
+      const direction=i%2===0?-1:1;
+      const x=(1-fade)*direction*42;
+      const y=(1-fade)*28;
       const scale=.94+fade*.06;
-      card.style.opacity=String(.2+fade*.8);
+      card.style.opacity=String(.06+fade*.94);
       card.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0) scale('+scale.toFixed(3)+')';
     }
     chapter.classList.toggle('is-active',active);
+  });
+}
+function updateGardenStory(){
+  const section=document.getElementById('garden');
+  if(!section) return;
+  const p=pageProgress(section);
+  const stems=qsa('.garden-stem',section);
+  const blooms=qsa('.bloom',section);
+  stems.forEach((stem,i)=>{
+    const start=i*.16;
+    const progress=clamp((p-start)/.34);
+    stem.style.strokeDasharray='1';
+    stem.style.strokeDashoffset=String(1-progress);
+    stem.style.opacity=String(.18+progress*.82);
+  });
+  blooms.forEach((bloom,i)=>{
+    const start=.18+i*.17;
+    const progress=clamp((p-start)/.24);
+    bloom.style.opacity=String(.08+progress*.92);
+    bloom.style.transform='scale('+(0.72+progress*.28).toFixed(3)+')';
   });
 }
 
@@ -261,6 +279,7 @@ function updateGlobalScroll(){
   const topbar=document.querySelector('.topbar');
   if(topbar) topbar.classList.toggle('scrolled',y>80);
   updateVisualStory();
+  updateGardenStory();
   updateMemoryStory();
 }
 let scrollTick=false;
@@ -275,8 +294,9 @@ updateGlobalScroll();
 if(garden){
   const gardenObserver=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{if(entry.isIntersecting) entry.target.classList.add('garden-active');});
-  },{threshold:.18});
+  },{threshold:.01});
   gardenObserver.observe(garden);
+  updateGardenStory();
 }
 
 
@@ -371,20 +391,21 @@ function updateMemoryStory(){
   const cards=qsa('.story-photo',memoryScene);
   if(!cards.length) return;
   const center=p*(cards.length-1);
-  const finale=clamp((p-.9)/.1);
+  const finale=clamp((p-.92)/.08);
 
   cards.forEach((card,index)=>{
     const dist=Math.abs(index-center);
-    const isActive=dist<.55;
-    const near=dist<4.8;
     const baseScale=parseFloat(card.style.getPropertyValue('--base-scale')||'1');
-    const opacity=Math.max(near?(1-dist/5.2):0,finale*.32);
-    const blur=Math.max(0,(dist-1.8)*1.6);
-    const scale=isActive?baseScale*1.18:baseScale*(.9+Math.max(0,1-dist/8)*.05);
-    card.style.opacity=String(Math.min(1,opacity));
-    card.style.filter='blur('+blur.toFixed(2)+'px)';
-    card.style.transform='rotate(var(--rotation)) scale('+scale.toFixed(3)+')';
-    card.style.zIndex=String(20+Math.round((8-dist)*8)+(isActive?80:0));
+    const baseX=parseFloat((card.style.left||'0').replace('vw',''))||0;
+    const baseY=parseFloat((card.style.top||'0').replace('vh',''))||0;
+    const driftX=Math.sin((index+1)*.73+p*Math.PI*2)*1.8;
+    const driftY=Math.cos((index+1)*.51+p*Math.PI*2)*1.8;
+    const isActive=dist<.55;
+    const scale=isActive?baseScale*1.14:baseScale;
+    card.style.opacity='1';
+    card.style.filter='none';
+    card.style.transform='translate3d('+driftX.toFixed(2)+'vw,'+driftY.toFixed(2)+'vh,0) rotate(var(--rotation)) scale('+scale.toFixed(3)+')';
+    card.style.zIndex=String(10+Math.round((90-dist))+ (isActive?160:0));
     card.classList.toggle('is-active',isActive);
   });
 
@@ -394,10 +415,10 @@ function updateMemoryStory(){
   if(memoryStoryText) memoryStoryText.textContent=stageCopy[2];
   if(memoryStoryNumber) memoryStoryNumber.textContent=String(Math.min(cards.length,Math.floor(center)+1)).padStart(2,'0');
   if(memoryStoryCopy){
-    memoryStoryCopy.style.transform='translateY('+(Math.sin(p*Math.PI*4)*10)+'px) scale('+(1-finale*.04)+')';
-    memoryStoryCopy.style.opacity=String(finale>.65?.15:1);
+    memoryStoryCopy.style.transform='translateY('+(Math.sin(p*Math.PI*4)*7)+'px) scale('+(1-finale*.03)+')';
+    memoryStoryCopy.style.opacity=String(finale>.72?.18:1);
   }
-  if(memoryStorySticky) memoryStorySticky.classList.toggle('is-finale',finale>.4);
+  if(memoryStorySticky) memoryStorySticky.classList.toggle('is-finale',finale>.72);
   if(memoryStoryFinale) memoryStoryFinale.style.opacity=String(finale);
 }
 buildMemoryStory();
@@ -519,7 +540,7 @@ function loadTrack(index,autoplay=false){
   if(trackArtist) trackArtist.textContent='shuffle · '+String(trackIndex+1)+' / '+String(queue.length);
   audio.muted=false;
   mutedAutoplayFallback=false;
-  audio.src='assets/music/'+file;
+  audio.src='https://vpl0zcyuaj7poz7d.public.blob.vercel-storage.com/'+encodeURIComponent(file);
   audio.load();
   if(playerProgress) playerProgress.style.width='0%';
   if(currentTime) currentTime.textContent='0:00';
