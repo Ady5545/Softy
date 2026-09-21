@@ -230,34 +230,52 @@ function pageProgress(element){
 function updateVisualStory(){
   const section=document.getElementById('visualStory');
   if(!section) return;
-  const p=pageProgress(section);
+  const stage=section.querySelector('.story-stage');
   const visual=section.querySelector('.story-visual');
   const flower=section.querySelector('.story-flower');
   const orbitOne=section.querySelector('.orbit-one');
   const orbitTwo=section.querySelector('.orbit-two');
   const chapters=qsa('.story-chapter',section);
-  if(flower){
-    const scale=.82+p*.34;
-    const rotate=-6+p*16;
-    flower.style.transform='translate(-50%,-50%) scale('+scale.toFixed(3)+') rotate('+rotate.toFixed(2)+'deg)';
-    flower.style.opacity=String(.7+p*.3);
+  const rect=section.getBoundingClientRect();
+  const travel=Math.max(1,section.offsetHeight-window.innerHeight);
+  const p=clamp((-rect.top)/travel);
+  const inside=rect.top<=0 && rect.bottom>=window.innerHeight;
+
+  if(stage){
+    stage.classList.toggle('is-fixed',inside);
+    stage.classList.toggle('is-after',rect.bottom<window.innerHeight);
+    if(rect.bottom<window.innerHeight){
+      stage.style.top=travel+'px';
+    }else if(rect.top>0){
+      stage.style.top='0px';
+    }else{
+      stage.style.top='0px';
+    }
   }
-  if(orbitOne) orbitOne.style.transform='translate(-50%,-50%) rotate('+(p*120).toFixed(2)+'deg) scale('+(1+p*.06).toFixed(3)+')';
-  if(orbitTwo) orbitTwo.style.transform='translate(-50%,-50%) rotate('+(-p*80).toFixed(2)+'deg) scale('+(1-p*.04).toFixed(3)+')';
-  if(visual) visual.style.background='radial-gradient(circle at '+(50+p*10)+'% '+(46-p*5)+'%,#fff 0,#fff7fa 55%,var(--cream) 100%)';
+  if(flower){
+    const scale=.86+p*.22;
+    const rotate=-5+p*14;
+    flower.style.transform='translate(-50%,-50%) scale('+scale.toFixed(3)+') rotate('+rotate.toFixed(2)+'deg)';
+    flower.style.opacity=String(.72+p*.28);
+  }
+  if(orbitOne) orbitOne.style.transform='translate(-50%,-50%) rotate('+(p*110).toFixed(2)+'deg) scale('+(1+p*.05).toFixed(3)+')';
+  if(orbitTwo) orbitTwo.style.transform='translate(-50%,-50%) rotate('+(-p*75).toFixed(2)+'deg) scale('+(1-p*.03).toFixed(3)+')';
+  if(visual) visual.style.background='radial-gradient(circle at 50% 46%,#fff 0,#fff7fa 55%,var(--cream) 100%)';
+
+  const phase=p*Math.max(0,chapters.length-1);
   chapters.forEach((chapter,i)=>{
-    const center=(i+.5)/chapters.length;
-    const dist=Math.abs(p-center);
-    const active=dist<.125;
-    const fade=clamp(1-dist/.22);
+    const dist=Math.abs(i-phase);
+    const fade=clamp(1-dist/.82);
+    const active=dist<.48;
     const card=chapter.querySelector('.story-card');
     if(card){
-      const direction=i%2===0?-1:1;
-      const x=(1-fade)*direction*42;
+      const dir=i%2===0?-1:1;
+      const x=(1-fade)*dir*70;
       const y=(1-fade)*28;
-      const scale=.94+fade*.06;
-      card.style.opacity=String(.06+fade*.94);
+      const scale=.96+fade*.04;
+      card.style.opacity=String(fade);
       card.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0) scale('+scale.toFixed(3)+')';
+      card.style.pointerEvents=active?'auto':'none';
     }
     chapter.classList.toggle('is-active',active);
   });
@@ -401,19 +419,34 @@ function updateMemoryStory(){
   const cards=qsa('.story-photo',memoryScene);
   if(!cards.length) return;
   cards.forEach((card,index)=>{
-    if(!card.style.getPropertyValue('--photo-x')){
-      const x=8+((index*37)%84);
-      const y=12+((index*53)%76);
-      card.style.setProperty('--photo-x',x+'%');
-      card.style.setProperty('--photo-y',y+'%');
+    if(!card.dataset.scattered){
+      const columns=7;
+      const row=Math.floor(index/columns);
+      const col=index%columns;
+      const x=7+(col*14.1)+((row*3.7)%5);
+      const y=8+(row*15.8)+((col*2.9)%5);
+      const rotation=-12+((index*17)%25);
+      const scale=.82+(((index*23)%35)/100);
+      card.style.left=x+'%';
+      card.style.top=y+'%';
+      card.style.setProperty('--rotation',rotation+'deg');
+      card.style.setProperty('--base-scale',scale.toFixed(2));
+      card.dataset.scattered='true';
     }
     card.style.opacity='1';
     card.style.filter='none';
-    card.classList.remove('is-active');
+    card.style.pointerEvents='auto';
   });
 }
 buildMemoryStory();
 requestAnimationFrame(()=>updateMemoryStory());
+document.addEventListener('click',event=>{
+  const card=event.target.closest('.story-photo');
+  if(card && memoryScene && memoryScene.contains(card)){
+    const index=Number(card.dataset.index||0);
+    openPhotoModal(index);
+  }
+});
 qsa('.story-photo',memoryScene).forEach((card,index)=>{
   const img=card.querySelector('img');
   if(img && !img.dataset.bound){
@@ -450,7 +483,11 @@ const photoModalNext=document.getElementById('photoModalNext');
 if(photoModalClose) photoModalClose.addEventListener('click',closePhotoModal);
 if(photoModalPrev) photoModalPrev.addEventListener('click',()=>stepPhoto(-1));
 if(photoModalNext) photoModalNext.addEventListener('click',()=>stepPhoto(1));
-if(photoModal) photoModal.addEventListener('click',e=>{if(e.target===photoModal) closePhotoModal()});
+if(photoModal) photoModal.addEventListener('click',e=>{
+  if(e.target===photoModal || e.target.classList.contains('photo-modal')){
+    closePhotoModal();
+  }
+});
 
 const playlist=[
   ["Me Gustas Tu — Sped Up","manu-chao-me-gustas-tu-sped-up-version-official-audio-128kbps.mp3"],
@@ -620,13 +657,22 @@ function setMusicOpen(open){
   if(playerToggle) playerToggle.setAttribute('aria-expanded',open?'true':'false');
 }
 if(playerToggle){
-  playerToggle.addEventListener('click',event=>{
+  playerToggle.onclick=event=>{
     event.preventDefault();
     event.stopPropagation();
     setMusicOpen(!musicPlayer.classList.contains('open'));
-  });
+  };
+  playerToggle.onpointerdown=event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    setMusicOpen(!musicPlayer.classList.contains('open'));
+  };
 }
-if(playerClose) playerClose.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();setMusicOpen(false);});
+if(playerClose) playerClose.onclick=event=>{
+  event.preventDefault();
+  event.stopPropagation();
+  setMusicOpen(false);
+};
 audio.addEventListener('play',()=>{musicPlayer?.classList.add('playing');});
 audio.addEventListener('pause',()=>{musicPlayer?.classList.remove('playing');});
 audio.addEventListener('ended',()=>{musicPlayer?.classList.remove('playing');loadTrack(trackIndex+1,true);});
