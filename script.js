@@ -99,3 +99,46 @@ const observer=new IntersectionObserver(entries=>{
   entries.forEach(entry=>{if(entry.isIntersecting){entry.target.style.animationPlayState='running';observer.unobserve(entry.target)}});
 },{threshold:.12});
 document.querySelectorAll('.reveal').forEach(el=>{el.style.animationPlayState='paused';observer.observe(el)});
+
+const moodLines=[
+  'soft and sunny ☼',
+  'pink-cloud kind of day ♡',
+  'tiny bit chaotic, still cute ✦',
+  'quietly doing your best',
+  'main-character-with-a-snack energy',
+  'today deserves a little sparkle'
+];
+let moodIndex=Math.floor(Math.random()*moodLines.length);
+const moodButton=document.getElementById('moodButton');
+const moodText=document.getElementById('moodText');
+moodButton.addEventListener('click',()=>{
+  moodIndex=(moodIndex+1)%moodLines.length;
+  moodText.textContent=moodLines[moodIndex];
+});
+
+document.getElementById('wishButton').addEventListener('click',(event)=>{
+  for(let i=0;i<7;i++){
+    const star=document.createElement('span');
+    star.className='wish-star';
+    star.textContent=['✦','·','♡'][Math.floor(Math.random()*3)];
+    star.style.left=(event.clientX-6+(Math.random()*34-17))+'px';
+    star.style.top=(event.clientY-6+(Math.random()*24-12))+'px';
+    star.style.setProperty('--dx',(Math.random()*160-80)+'px');
+    star.style.animationDelay=(Math.random()*.12)+'s';
+    document.body.appendChild(star);
+    setTimeout(()=>star.remove(),2100);
+  }
+});
+
+const visitKey='softy-surprises-opened';
+let visitCount=Number(localStorage.getItem(visitKey)||0);
+function bumpSurpriseCount(){
+  visitCount++;
+  localStorage.setItem(visitKey,String(visitCount));
+  const el=document.getElementById('visitCount');
+  if(el) el.textContent=visitCount;
+}
+document.getElementById('visitCount').textContent=visitCount;
+document.querySelectorAll('#surpriseBtn,#messageButton,.open-card,#newBouquet,#letterButton').forEach(el=>{
+  el.addEventListener('click',bumpSurpriseCount);
+});
