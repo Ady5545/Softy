@@ -1098,3 +1098,349 @@ function shuffle(items){
     activeStar=null;
   });
 })();
+
+
+/* ================= SOFTY LIVE CHAT =================
+   Peer-to-peer room chat. No messages are stored on a server.
+   Both people keep this page open while chatting.
+====================================================== */
+(function softyLiveChat(){
+  const chat = document.getElementById('softyChat');
+  const fab = document.getElementById('softyChatFab');
+  const panel = document.getElementById('softyChatPanel');
+  const close = document.getElementById('softyChatClose');
+  const intro = document.getElementById('softyChatIntro');
+  const room = document.getElementById('softyChatRoom');
+  const status = document.getElementById('softyChatStatus');
+  const nameInput = document.getElementById('softyChatName');
+  const createBtn = document.getElementById('softyChatCreate');
+  const showJoinBtn = document.getElementById('softyChatShowJoin');
+  const joinBox = document.getElementById('softyChatJoinBox');
+  const roomInput = document.getElementById('softyChatRoomCode');
+  const joinBtn = document.getElementById('softyChatJoin');
+  const errorBox = document.getElementById('softyChatError');
+  const roomCodeDisplay = document.getElementById('softyChatRoomCodeDisplay');
+  const copyBtn = document.getElementById('softyChatCopy');
+  const messages = document.getElementById('softyChatMessages');
+  const empty = document.getElementById('softyChatEmpty');
+  const typing = document.getElementById('softyChatTyping');
+  const compose = document.getElementById('softyChatCompose');
+  const input = document.getElementById('softyChatInput');
+  const heart = document.getElementById('softyChatHeart');
+  const unread = document.getElementById('softyChatUnread');
+
+  if(!chat || !fab || !panel || typeof Peer !== 'function') return;
+
+  let peer = null;
+  let connection = null;
+  let displayName = '';
+  let roomCode = '';
+  let isHost = false;
+  let typingTimer = null;
+  let unseen = 0;
+  const savedName = localStorage.getItem('softy-chat-name') || '';
+  const roomHistoryPrefix = 'softy-chat-history:';
+
+  if(nameInput) nameInput.value = savedName;
+
+  function setOpen(open){
+    chat.classList.toggle('open',open);
+    fab.setAttribute('aria-expanded',String(open));
+    panel.setAttribute('aria-hidden',String(!open));
+    if(open){
+      unseen=0;
+      updateUnread();
+      setTimeout(()=>input?.focus(),120);
+    }
+  }
+  fab.addEventListener('click',()=>setOpen(!chat.classList.contains('open')));
+  close?.addEventListener('click',()=>setOpen(false));
+
+  function setStatus(text,live=false){
+    if(!status)return;
+    status.classList.toggle('live',live);
+    const label=status.querySelector('span:last-child');
+    if(label)label.textContent=text;
+  }
+
+  function setError(message=''){
+    if(errorBox)errorBox.textContent=message;
+  }
+
+  function updateUnread(){
+    if(!unread)return;
+    unread.textContent=String(unseen);
+    unread.classList.toggle('show',unseen>0);
+    unread.setAttribute('aria-hidden',String(unseen===0));
+  }
+
+  function safeName(){
+    const value=(nameInput?.value||displayName||'You').trim().replace(/\s+/g,' ').slice(0,18);
+    return value || 'You';
+  }
+
+  function makeRoomCode(){
+    const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let out='';
+    for(let i=0;i<6;i++) out+=alphabet[Math.floor(Math.random()*alphabet.length)];
+    return out;
+  }
+
+  function peerIdFor(code){ return 'softy-'+code.toLowerCase(); }
+
+  function nowLabel(timestamp){
+    try{
+      return new Date(timestamp).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+    }catch(_){ return ''; }
+  }
+
+  function loadHistory(){
+    if(!messages || !roomCode)return;
+    messages.innerHTML='';
+    const data=localStorage.getItem(roomHistoryPrefix+roomCode);
+    if(!data)return;
+    try{
+      const list=JSON.parse(data);
+      if(!Array.isArray(list))return;
+      list.slice(-80).forEach(renderMessage);
+      if(list.length) empty?.classList.add('hidden');
+    }catch(_){}
+    messages.scrollTop=messages.scrollHeight;
+  }
+
+  function saveMessage(message){
+    if(!roomCode)return;
+    const key=roomHistoryPrefix+roomCode;
+    let list=[];
+    try{list=JSON.parse(localStorage.getItem(key)||'[]');}catch(_){}
+    list.push(message);
+    localStorage.setItem(key,JSON.stringify(list.slice(-80)));
+  }
+
+  function escapeText(value){
+    return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  function renderMessage(message){
+    if(!messages)return;
+    empty?.classList.add('hidden');
+
+    const wrap=document.createElement('div');
+    wrap.className='softy-chat-bubble-wrap '+(message.senderId===peer?.id?'me':'them');
+
+    const bubble=document.createElement('article');
+    bubble.className='softy-chat-bubble';
+
+    const sender=document.createElement('span');
+    sender.className='softy-chat-sender';
+    sender.textContent=message.senderId===peer?.id?'you':(message.senderName||'her');
+
+    const text=document.createElement('p');
+    text.className='softy-chat-text';
+    text.textContent=message.text;
+
+    const time=document.createElement('span');
+    time.className='softy-chat-time';
+    time.textContent=nowLabel(message.ts);
+
+    bubble.append(sender,text,time);
+    wrap.appendChild(bubble);
+    messages.appendChild(wrap);
+    messages.scrollTop=messages.scrollHeight;
+  }
+
+  function addMessage(text){
+    const clean=String(text||'').trim().slice(0,500);
+    if(!clean || !connection?.open)return;
+
+    const message={
+      type:'message',
+      text:clean,
+      senderName:displayName,
+      senderId:peer.id,
+      ts:Date.now()
+    };
+
+    renderMessage(message);
+    saveMessage(message);
+    try{connection.send(message);}catch(_){}
+  }
+
+  function setConnected(connected){
+    if(connected){
+      intro?.setAttribute('hidden','');
+      room?.removeAttribute('hidden');
+      setStatus('live together',true);
+      loadHistory();
+      input?.focus();
+    }else{
+      room?.setAttribute('hidden','');
+      intro?.removeAttribute('hidden');
+      setStatus('offline',false);
+    }
+  }
+
+  function closePeer(){
+    try{connection?.close();}catch(_){}
+    try{peer?.destroy();}catch(_){}
+    connection=null;
+    peer=null;
+    setConnected(false);
+  }
+
+  function bindConnection(conn){
+    connection=conn;
+    setStatus('connecting…',false);
+    conn.on('open',()=>{
+      setStatus('live together',true);
+      setConnected(true);
+      try{conn.send({type:'hello',senderName:displayName});}catch(_){}
+    });
+    conn.on('data',data=>{
+      if(!data || typeof data!=='object')return;
+
+      if(data.type==='message'){
+        renderMessage(data);
+        saveMessage(data);
+        if(!chat.classList.contains('open')){
+          unseen++;
+          updateUnread();
+        }
+      }else if(data.type==='typing'){
+        typing?.classList.toggle('show',!!data.value);
+        clearTimeout(typingTimer);
+        if(data.value){
+          typingTimer=setTimeout(()=>typing?.classList.remove('show'),1600);
+        }
+      }
+    });
+    conn.on('close',()=>{
+      setStatus('connection closed',false);
+      connection=null;
+      setConnected(false);
+      setError('The room connection closed. Create or join the room again to reconnect.');
+    });
+    conn.on('error',()=>{
+      setStatus('connection error',false);
+      setError('The connection could not be opened. Check the room code and try again.');
+    });
+  }
+
+  function ensureName(){
+    displayName=safeName();
+    localStorage.setItem('softy-chat-name',displayName);
+    setError('');
+    return displayName;
+  }
+
+  function createRoom(){
+    ensureName();
+    isHost=true;
+    roomCode=makeRoomCode();
+    roomCodeDisplay.textContent=roomCode;
+    setError('Creating your room…');
+    chat.setAttribute('aria-busy','true');
+    createBtn.disabled=true;
+
+    peer=new Peer(peerIdFor(roomCode));
+    peer.on('open',()=>{
+      setError('');
+      chat.removeAttribute('aria-busy');
+      createBtn.disabled=false;
+      roomCodeDisplay.textContent=roomCode;
+      setConnected(true);
+      setStatus('waiting for you two',false);
+      if(copyBtn)copyBtn.textContent='copy';
+    });
+    peer.on('connection',conn=>bindConnection(conn));
+    peer.on('error',error=>{
+      chat.removeAttribute('aria-busy');
+      createBtn.disabled=false;
+      if(error?.type==='unavailable-id'){
+        try{peer.destroy();}catch(_){}
+        setError('That room code was already taken. Making you a fresh one…');
+        window.setTimeout(createRoom,260);
+      }else{
+        setError('The room could not be created. Try again in a moment.');
+      }
+    });
+    peer.on('disconnected',()=>setStatus('reconnecting…',false));
+    peer.on('close',()=>{ if(connection)connection=null; setStatus('offline',false); });
+  }
+
+  function joinRoom(){
+    ensureName();
+    const code=(roomInput?.value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+    if(code.length!==6){
+      setError('Enter the 6-character room code.');
+      return;
+    }
+
+    roomCode=code;
+    isHost=false;
+    roomCodeDisplay.textContent=code;
+    chat.setAttribute('aria-busy','true');
+    joinBtn.disabled=true;
+    setError('Finding the room…');
+
+    peer=new Peer();
+    peer.on('open',()=>{
+      const conn=peer.connect(peerIdFor(code),{reliable:true});
+      bindConnection(conn);
+    });
+    peer.on('error',error=>{
+      chat.removeAttribute('aria-busy');
+      joinBtn.disabled=false;
+      if(error?.type==='peer-unavailable'){
+        setError('That room is not open right now. Ask the other person to open it and try again.');
+      }else{
+        setError('The chat service could not be reached. Try again in a moment.');
+      }
+    });
+    peer.on('disconnected',()=>setStatus('reconnecting…',false));
+  }
+
+  showJoinBtn?.addEventListener('click',()=>{
+    joinBox?.removeAttribute('hidden');
+    roomInput?.focus();
+  });
+  createBtn?.addEventListener('click',createRoom);
+  joinBtn?.addEventListener('click',joinRoom);
+
+  copyBtn?.addEventListener('click',async()=>{
+    if(!roomCode)return;
+    try{
+      await navigator.clipboard.writeText(roomCode);
+      copyBtn.textContent='copied ♡';
+      setTimeout(()=>{copyBtn.textContent='copy';},1200);
+    }catch(_){
+      setError('Room code: '+roomCode);
+    }
+  });
+
+  compose?.addEventListener('submit',event=>{
+    event.preventDefault();
+    const value=input?.value||'';
+    addMessage(value);
+    if(input){input.value='';}
+    if(connection?.open) connection.send({type:'typing',value:false});
+  });
+
+  input?.addEventListener('input',()=>{
+    if(!connection?.open)return;
+    try{connection.send({type:'typing',value:true});}catch(_){}
+    clearTimeout(typingTimer);
+    typingTimer=setTimeout(()=>{
+      try{connection?.send({type:'typing',value:false});}catch(_){}
+    },1000);
+  });
+
+  heart?.addEventListener('click',()=>addMessage('♡'));
+
+  window.addEventListener('beforeunload',()=>{
+    try{connection?.close();}catch(_){}
+    try{peer?.destroy();}catch(_){}
+  });
+
+  setStatus('offline',false);
+})();
