@@ -320,13 +320,7 @@ window.addEventListener('scroll',()=>{
 window.addEventListener('resize',updateGlobalScroll,{passive:true});
 updateGlobalScroll();
 
-if(garden){
-  const gardenObserver=new IntersectionObserver(entries=>{
-    entries.forEach(entry=>{if(entry.isIntersecting) entry.target.classList.add('garden-active');});
-  },{threshold:.01});
-  gardenObserver.observe(garden);
-  updateGardenStory();
-}
+
 
 
 const cursorGlow=document.getElementById('cursorGlow');
@@ -418,20 +412,28 @@ function updateMemoryStory(){
   if(!memoryScene) return;
   const cards=qsa('.story-photo',memoryScene);
   if(!cards.length) return;
+  const mobile=window.innerWidth<=560;
+  const tablet=window.innerWidth>560&&window.innerWidth<=900;
+  const cols=mobile?5:(tablet?7:9);
+  const rows=Math.ceil(cards.length/cols);
   cards.forEach((card,index)=>{
-    if(!card.dataset.scattered){
-      const columns=7;
-      const row=Math.floor(index/columns);
-      const col=index%columns;
-      const x=7+(col*14.1)+((row*3.7)%5);
-      const y=8+(row*15.8)+((col*2.9)%5);
-      const rotation=-12+((index*17)%25);
-      const scale=.82+(((index*23)%35)/100);
-      card.style.left=x+'%';
-      card.style.top=y+'%';
+    if(!card.dataset.scattered || card.dataset.scatterCols!==String(cols)){
+      const row=Math.floor(index/cols);
+      const col=index%cols;
+      const colStep=mobile?18.8:(tablet?14.2:11.1);
+      const rowStep=mobile?9.9:(tablet?10.4:10.2);
+      const jitterX=((index*17)%7)-3;
+      const jitterY=((index*29)%6)-3;
+      const x=6+(col*colStep)+jitterX;
+      const y=5+(row*rowStep)+jitterY;
+      const rotation=-13+((index*17)%27);
+      const scale=(.84+(((index*23)%25)/100)).toFixed(2);
+      card.style.setProperty('--photo-x',x+'%');
+      card.style.setProperty('--photo-y',y+'%');
       card.style.setProperty('--rotation',rotation+'deg');
-      card.style.setProperty('--base-scale',scale.toFixed(2));
+      card.style.setProperty('--base-scale',scale);
       card.dataset.scattered='true';
+      card.dataset.scatterCols=String(cols);
     }
     card.style.opacity='1';
     card.style.filter='none';
