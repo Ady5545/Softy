@@ -54,14 +54,24 @@ const newBouquet=document.getElementById('newBouquet');
 if(newBouquet) newBouquet.addEventListener('click',()=>{ bouquet('bouquetCanvas'); bumpSurpriseCount(); });
 
 const jarMessages=[
-  'I hope something unexpectedly nice happens to you today.',
-  'Tiny reminder: you are very, very easy to be proud of.',
-  'If this message found you at the wrong time, come back later. I saved another one.',
-  'Drink some water. Then continue being wonderful.',
-  'You have permission to have a slow day.',
-  'Somewhere on this website there is probably another thing I forgot to tell you.',
-  'This is your official reminder that you deserve soft days too.'
+  "Hiiieee myy bobluu poplluuu...i hopee youurr dayyy is going well.....ii lovvvee youuuuuuu soooooo mucchhhhhh<3333 🩷🎀💗",
+  "Heyyy!!! youuu....YESS YOUU MISS....you aree verryy beautifull!!<333.... i waavuuuuu 💗🎀🥹",
+  "Missss sundarii with bigg eyes...pretty smiilee...silky hairr...soothing smell...andd cutee voicee..I DO LOVE YOUU AND YOU ARE MINE ONLY!...DONT FORGET THAT EVEN FOR A SECOND 🩷🎀💗",
+  "Myyy cutuu putuuu pucchuu pucchuu lovelyyy cutieee beautifulll preettyyy sweeeett darlinng honeeyy sweetheasrttt popluuuu sundaruuu wifeeyyyy muwaahhhhhh i lovvveee youuuuuuu usooooooooo mucccccchhhhhh!!! AAO JORR SE DABALUU TUMHEE 🎀💗🩷🥹",
+  "I DONT WANTT 8TH KI ANANYA I LOVE MY CURRENT ANANYA😭 🩷🎀",
+  "Fallen in love with the name ananya since 8th🫠 💗🎀",
+  "I LOVVEE YOUU BABBYYY ANDD IF IT'SS QUITEEE ALRIGGHTTTT!!! I NEED YOUU BABBYY TO WARMM THESE LONELYY NIGHTTTS....<333 🩷🎀💗",
+  "I WOULDD NEVERR FALL IN LOVEE AGAIN UNTILL I FOUNDD HER.....I SAID!! I WOULDD NEVER FALL IN LOVE UNTILL I FOUNDD HERRR I FOUNDDD YOUUUUU!!!!!!!!! YES YOU MY LOVEE...YOU ARE A VERY LOVELY CREATURE OF GOD AND I LOVE THIS CREATURE SO MUCH 💗🎀🩷",
+  "III DONNNTT CAREEE HOWWW LONGGG IT TAKESSS....AS LONGG AS I'M WITHH YOUU I'VE GOT A SMILLEE ONNN MYYY FACCEEEEE.....SAVVEE YOUURR TEARSSS IT'LLL BEE OKKKKKAAYYYYYYY....ALL I KNOWW....ISS YOU ARE....HEREEEEE....WITHH MEE!!!! YAYAYAY YIPPEPEEEEE 🩷🎀💗",
+  "TUM MERI HO...MERI THI...MERI HI RAHOGI MISS ACHECHEWD QWEENN....AAYI BADHII...JOR SE PICCHE SE PAKAD KE EK HUG KARUNGA YAHI SAARA ATTITUDE NIKL JAYEGA 💗🎀🩷",
+  "w...woo aapki kamar to badhiya haii hehehe 🎀💗",
+  "TUMHAREEE CHHOTUU SEE PYAREE SEE KUCHUU PUCCHU CHEHREE HOO KUCHI MUCHII KARKKEEE DABADUNGAA JORRR SEEEE!!!!! 🩷🎀💗",
+  "\"Ananya baal khol na\" 🎀💗",
+  "\"Ayy Ananya baal khol na pleaseee\" 🩷🎀",
+  "\"AREYY HAATH HI TO CHHUA HAI ITNA KYU PAGAL HORHI HAI....KISI DIN HUG KRDIYA TO MAR HI JAYEGI\" 💗🎀🥹",
+  "KHANA KHALO! 🍽️🩷🎀💗"
 ];
+
 const surpriseMessages=[
   'you found the secret-ish button ♡',
   'yes, I made the flowers random on purpose',
