@@ -206,34 +206,8 @@ const visitCountEl=document.getElementById('visitCount');
 if(visitCountEl) visitCountEl.textContent=String(visitCount);
 
 const progressBar=document.getElementById('scrollProgress');
-const story=document.querySelector('.scroll-story');
-const storyFlower=document.querySelector('.story-flower');
-const orbitOne=document.querySelector('.orbit-one');
-const orbitTwo=document.querySelector('.orbit-two');
-const storyCopy=document.querySelector('.story-copy');
-const storyTitle=document.getElementById('storyTitle');
-const storyText=document.getElementById('storyText');
-const storyNumber=document.getElementById('storyNumber');
-const storySteps=[
-  ['It starts<br><em>with a feeling.</em>','Scroll slowly. The page will carry the story forward with you.'],
-  ['Then it becomes<br><em>a little memory.</em>','Small moments deserve a place that feels as considered as the memories themselves.'],
-  ['Then a collection of<br><em>little things.</em>','Words, photographs, music and details — all in one quiet corner.'],
-  ['And it keeps becoming<br><em>more yours.</em>','This is only the beginning.']
-];
-
 const garden=document.getElementById('garden');
 const gardenCanvas=document.getElementById('gardenCanvas');
-let gardenPaths=[];
-if(gardenCanvas){
-  gardenPaths=qsa('.garden-stem,.bloom path',gardenCanvas);
-  gardenPaths.forEach(path=>{
-    if(typeof path.getTotalLength==='function'){
-      const len=path.getTotalLength();
-      path.style.strokeDasharray=String(len);
-      path.style.strokeDashoffset=String(len);
-    }
-  });
-}
 
 function pageProgress(element){
   if(!element) return 0;
@@ -241,55 +215,31 @@ function pageProgress(element){
   const travel=Math.max(1,element.offsetHeight-window.innerHeight);
   return clamp((window.scrollY-absoluteTop)/travel);
 }
-function updateScrollMotion(){
+
+function updateGlobalScroll(){
   const y=window.scrollY||window.pageYOffset||0;
   const max=Math.max(1,document.documentElement.scrollHeight-window.innerHeight);
   if(progressBar) progressBar.style.width=(y/max*100)+'%';
-
   const topbar=document.querySelector('.topbar');
   if(topbar) topbar.classList.toggle('scrolled',y>80);
-
-  if(story&&storyFlower&&orbitOne&&orbitTwo&&storyCopy&&storyTitle&&storyText&&storyNumber){
-    const p=pageProgress(story);
-    const step=Math.min(3,Math.floor(p*4));
-    const pulse=Math.sin(p*Math.PI);
-    storyFlower.style.transform='translate(-50%,-50%) rotate('+(p*300)+'deg) scale('+(1+pulse*.35)+')';
-    storyFlower.style.left=(50+Math.sin(p*Math.PI*2)*24)+'%';
-    storyFlower.style.top=(50+Math.cos(p*Math.PI*2)*14)+'%';
-    orbitOne.style.transform='translate(-50%,-50%) rotate('+(p*180)+'deg) scale('+(1+p*.22)+')';
-    orbitTwo.style.transform='translate(-50%,-50%) rotate('+(-p*150)+'deg) scale('+(1-p*.16)+')';
-    storyCopy.style.transform='translateY('+(Math.sin(p*Math.PI*4)*16)+'px)';
-    storyCopy.style.opacity=String(.72+.28*Math.sin(p*Math.PI));
-    storyTitle.innerHTML=storySteps[step][0];
-    storyText.textContent=storySteps[step][1];
-    storyNumber.textContent=String(step+1).padStart(2,'0');
-  }
-
-  if(garden&&gardenPaths.length){
-    const p=pageProgress(garden);
-    gardenPaths.forEach(path=>{
-      const len=path.getTotalLength();
-      path.style.strokeDasharray=String(len);
-      path.style.strokeDashoffset=String(len*(1-p));
-      path.style.opacity=String(Math.min(1,Math.max(.08,p*1.7)));
-    });
-    qsa('.bloom',gardenCanvas).forEach((bloom,index)=>{
-      const local=clamp((p-index*.08)/.55);
-      bloom.style.transform='scale('+(0.45+local*.55)+')';
-      bloom.style.opacity=String(local);
-    });
-  }
-
   updateMemoryStory();
 }
 let scrollTick=false;
 window.addEventListener('scroll',()=>{
   if(scrollTick) return;
   scrollTick=true;
-  requestAnimationFrame(()=>{updateScrollMotion();scrollTick=false;});
+  requestAnimationFrame(()=>{updateGlobalScroll();scrollTick=false;});
 },{passive:true});
-window.addEventListener('resize',updateScrollMotion,{passive:true});
-updateScrollMotion();
+window.addEventListener('resize',updateGlobalScroll,{passive:true});
+updateGlobalScroll();
+
+if(garden){
+  const gardenObserver=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{if(entry.isIntersecting) entry.target.classList.add('garden-active');});
+  },{threshold:.18});
+  gardenObserver.observe(garden);
+}
+
 
 const cursorGlow=document.getElementById('cursorGlow');
 const heartCursor=document.getElementById('heartCursor');
@@ -321,7 +271,7 @@ if(unlockHeart) unlockHeart.addEventListener('click',()=>{
   if(paper) paper.classList.add('unlocked');
 });
 
-const photoNames=["Copy of 20250414_205158.jpg","610.jpg","771.jpg","Copy of 20250418_065929.jpg","1018.jpg","413.jpg","1193.jpg","836.jpg","565.jpg","940.jpg","982.jpg","1225.jpg","570.jpg","564.jpg","558.jpg","835.jpg","1194.jpg","945.jpg","986.jpg","950.jpg","944.jpg","1168.jpg","1237.jpg","1009.jpg","263.jpg","1091.jpg","1000001011.jpg","923.jpg","Copy of IMG_20250415_215058_524.jpg","922.jpg","Copy of Snapchat-211457099.jpg","1108.jpg","517.jpg","1083.jpg","1256.jpg","1242.jpg","1281.jpg","1243.jpg","1257.jpg","516.jpg","879.jpg","1123.jpg","1094.jpg","925.jpg","449.jpg","Copy of 20250414_205315.jpg","1311.jpg","450.jpg","1073.jpg","518.jpg","915.jpg","1265.jpg","1072.jpg","451.jpg","Copy of 20250401_180856.jpg","Copy of 20250319_184735.jpg","1312.jpg","447.jpg","1266.jpg","1267.jpg","917.jpg","1071.jpg","330.jpg","1061.jpg","912.jpg","1060.jpg","325.jpg","496.jpg","Copy of Snapchat-415738145.jpg","Copy of Snapchat-510064617.jpg","508.jpg","497.jpg","1010.jpg","Copy of 20250208_155121.jpg","1206.jpg","Copy of Snapchat-1870040060.jpg","Copy of Snapchat-1152265864.jpg","Copy of 20250418_065842.jpg","1007.jpg","1204.jpg","1006.jpg","756.jpg","Copy of Snapchat-430357962.jpg","Copy of 20250418_065924.jpg","Copy of 20250414_205222.jpg","1203.jpg","Copy of 20250208_155124.jpg","782.jpg","1174.jpg","609.jpg"];
+const photoNames=Array.from({length:90},(_,i)=>'photo-'+String(i+1).padStart(3,'0')+'.jpg');
 const memoryStory=[
   ['One little moment.','Keep it.','The kind you almost scroll past before realizing you want to keep it forever.'],
   ['Then another.','Find it.','The gallery is not a wall of thumbnails anymore — it is a little world you can wander through.'],
@@ -362,19 +312,11 @@ function setPhotoSource(img,name){
 }
 function buildMemoryStory(){
   if(!memoryScene) return;
-  memoryScene.innerHTML='';
-  if(memoryStoryTotal) memoryStoryTotal.textContent=String(photoNames.length);
+  const existing=qsa('.story-photo',memoryScene);
+  if(existing.length) return;
   photoNames.forEach((name,index)=>{
     const card=document.createElement('figure');
     card.className='story-photo';
-    const left=4+seeded(index,1)*82;
-    const top=6+seeded(index,2)*78;
-    const rotation=-16+seeded(index,3)*32;
-    const scale=.72+seeded(index,4)*.32;
-    card.style.left=left+'vw';
-    card.style.top=top+'vh';
-    card.style.setProperty('--rotation',rotation+'deg');
-    card.style.setProperty('--base-scale',String(scale));
     card.dataset.index=String(index);
     card.innerHTML='<img alt="Memory '+String(index+1)+'" loading="lazy" decoding="async"><figcaption>'+String(index+1).padStart(2,'0')+'</figcaption>';
     const image=card.querySelector('img');
@@ -383,6 +325,7 @@ function buildMemoryStory(){
     memoryScene.appendChild(card);
   });
 }
+
 function updateMemoryStory(){
   if(!memoryStorySection||!memoryScene) return;
   const p=pageProgress(memoryStorySection);
@@ -419,6 +362,14 @@ function updateMemoryStory(){
   if(memoryStoryFinale) memoryStoryFinale.style.opacity=String(finale);
 }
 buildMemoryStory();
+qsa('.story-photo',memoryScene).forEach((card,index)=>{
+  const img=card.querySelector('img');
+  if(img && !img.dataset.bound){
+    img.dataset.bound='true';
+    img.addEventListener('error',()=>card.classList.add('is-missing'),{once:true});
+    if(!card.dataset.boundClick){card.addEventListener('click',()=>openPhotoModal(index));card.dataset.boundClick='true';}
+  }
+});
 
 let lightboxIndex=0;
 const photoModal=document.getElementById('photoModal');
