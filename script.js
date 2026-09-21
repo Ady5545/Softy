@@ -347,7 +347,7 @@ function buildMemoryStory(){
     card.style.setProperty('--r',r);
     card.style.setProperty('--s',s);
     card.dataset.index=String(index);
-    card.innerHTML='<img src="assets/photos/'+name+'.jpg" alt="Memory '+String(index+1)+'" loading="lazy" decoding="async"><figcaption>'+String(index+1).padStart(2,'0')+'</figcaption>';
+    card.innerHTML='<img src="'+encodeURI(name)+'" alt="Memory '+String(index+1)+'" loading="lazy" decoding="async"><figcaption>'+String(index+1).padStart(2,'0')+'</figcaption>';
     const image=card.querySelector('img');
     image.addEventListener('error',()=>card.classList.add('is-missing'),{once:true});
     card.addEventListener('click',()=>openPhotoModal(index));
