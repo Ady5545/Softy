@@ -838,7 +838,7 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
       const x=3+seed(i+1)*94;
       const y=3+seed(i+101)*94;
       const r=-27+seed(i+201)*54;
-      const s=0.72+seed(i+301)*0.40;
+      const sc=0.72+seed(i+301)*0.40;
       card.style.setProperty('position','absolute','important');
       card.style.setProperty('left',x+'%','important');
       card.style.setProperty('top',y+'%','important');
@@ -848,7 +848,7 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
       card.style.setProperty('visibility','visible','important');
       card.style.setProperty('display','block','important');
       card.style.setProperty('pointer-events','auto','important');
-      card.style.setProperty('transform','translate(-50%,-50%) rotate('+r+'deg) scale('+s+')','important');
+      card.style.setProperty('transform','translate(-50%,-50%) rotate('+r+'deg) scale('+sc+')','important');
       card.style.setProperty('z-index',String(10+Math.floor(seed(i+401)*900)),'important');
       card.classList.add('softy-photo-ready');
       const img=$('img',card);
@@ -890,70 +890,172 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
     if(e.key==='ArrowRight')show(current+1);
   });
 
-  /* Clean music implementation. */
+  /* MUSIC: one audio element, real Blob source first, Git LFS media second. */
   const player=$('#musicPlayer'), toggle=$('#playerToggle'), close=$('#playerClose');
   const play=$('#playTrack'), prev=$('#prevTrack'), next=$('#nextTrack');
   const title=$('#trackTitle'), artist=$('#trackArtist'), bar=$('#playerProgress');
   const now=$('#currentTime'), dur=$('#duration'), trackBar=$('.player-progress');
+
+  /* Remove any earlier audio node/listeners from the experimental music code. */
   $$('audio').forEach(a=>a.remove());
+
   const audio=new Audio();
   audio.preload='metadata';
+  audio.playsInline=true;
+  audio.setAttribute('aria-label','Softy music');
   document.body.appendChild(audio);
 
-  const tracks=[
-    ['Me Gustas Tu — Sped Up','manu-chao-me-gustas-tu-sped-up-version-official-audio-128kbps.mp3'],
-    ['No. 1 Party Anthem','arctic-monkeys-no-1-party-anthem-lyrics.mp3'],
-    ['Good Luck, Charm','ks-makhan-good-luck-charm-320-kbps.mp3'],
-    ['Just the Two of Us','grover-washington-jr-just-the-two-of-us-feat-bill-withers-256-kbps.mp3'],
-    ['We Fell in Love in October','girl-in-red-we-fell-in-love-in-october-lyrics.mp3'],
-    ['Double Take','dhruv-double-take-lyrics.mp3'],
-    ['Jo Tum Mere Ho','anuv-jain-jo-tum-mere-ho-lyrics.mp3'],
-    ['Teenage Dream','stephen-dawes-teenage-dream-lyric-video.mp3'],
-    ['Make You Mine','public-make-you-mine-official-lyric-video.mp3'],
-    ['This Is What Autumn Feels Like','jvke-this-is-what-autumn-feels-like-official-lyric-video.mp3'],
-    ['Wildest Dreams','taylor-swift-wildest-dreams-lyrics.mp3'],
-    ['Lover — Shawn Mendes Version','taylor-swift-lover-remix-feat-shawn-mendes-lyric-video.mp3'],
-    ['Her','jvke-her-official-lyric-video.mp3'],
-    ['Next to You','jvke-next-to-you-official-lyric-video.mp3'],
-    ['O Rangrez','o-rangrez-lyrical-video-bhaag-milkha-bhaag-farhan-sonam-shreya-ghoshal-javed-bashir.mp3'],
-    ['My Love All Mine','mitski-my-love-mine-all-mine-official-lyric-video.mp3'],
-    ['Number 1 Girl','rose-number-one-girl-lyrics.mp3'],
-    ['Gosh She Looks Pretty','nato-kitch-gosh-she-looks-pretty-visualizer.mp3'],
-    ['Valleys','woah-valleys-lyrics.mp3'],
-    ['Eenie Meenie','sean-kingston-justin-bieber-eenie-meenie-lyrics.mp3'],
-    ['You Belong With Me','taylor-swift-you-belong-with-me-lyrics.mp3'],
-    ['Dooron Dooron','dooron-dooron-lyrics-paresh-pahuja-feat-harleen-sethi-shiv-tandan-meghdeep-bose-vaibhav-raj.mp3'],
-    ['Bairaiyya','bairiyaa-atif-aslam-shreya-ghoshal-lyrics-lyrical-bam-hindi.mp3'],
-    ['Rang Jo Lagyo','rang-jo-lagyo-lyrical-ramaiya-vastavaiya-girish-kumar-shruti-haasan-atif-aslam-shreya-ghoshal.mp3'],
-    ['Tere Bina','a-r-rahman-tere-bina-lyrical-song-aishwarya-rai-abhishek-bachchan-guru-gulzar.mp3'],
-    ['Thinking of You — AP Dhillon','thinking-of-you-official-audio-ap-dhillon.mp3'],
-    ['Laavan','laavan-music-video-jasmine-sandlas-mofusion-pro-media.mp3'],
-    ['Salvatore','lana-del-rey-salvatore-lyrics.mp3'],
-    ['Gehra Hua','gehra-hua-lyrics-arijit-singh-armaan-khan-dhurandhar.mp3']
-  ];
+  const defaultTrack=['Until I Found You — Solo','stephen-sanchez-until-i-found-you-official-video-256kbps.webm'];
+  const tracks=[defaultTrack,...shuffle(playlist.filter(track=>track[1]!==defaultTrack[1]))];
   let ti=0;
-  const fmt=v=>Number.isFinite(v)?Math.floor(v/60)+':'+String(Math.floor(v%60)).padStart(2,'0'):'0:00';
-  function load(i,autoplay=false){
-    ti=(i+tracks.length)%tracks.length;
+  let sourceIndex=0;
+
+  function sources(file){
+    const encoded=encodeURIComponent(file);
+    return [
+      'https://vpl0zcyuaj7poz7d.public.blob.vercel-storage.com/'+encoded,
+      'https://media.githubusercontent.com/media/Ady5545/Softy/main/assets/music/'+encoded,
+      '/assets/music/'+encoded
+    ];
+  }
+
+  function fmt(v){
+    return Number.isFinite(v)
+      ? Math.floor(v/60)+':'+String(Math.floor(v%60)).padStart(2,'0')
+      : '0:00';
+  }
+
+  function setSource(){
+    const list=sources(tracks[ti][1]);
+    audio.src=list[sourceIndex];
+    audio.load();
+  }
+
+  function updateTrackUi(){
     title.textContent=tracks[ti][0];
     artist.textContent='music corner · '+(ti+1)+' / '+tracks.length;
-    audio.src='/assets/music/'+encodeURIComponent(tracks[ti][1]);
-    audio.load();
-    if(bar)bar.style.width='0%'; if(now)now.textContent='0:00'; if(dur)dur.textContent='0:00';
-    if(autoplay)audio.play().catch(()=>{artist.textContent='tap play to start ♡';});
+    if(bar)bar.style.width='0%';
+    if(now)now.textContent='0:00';
+    if(dur)dur.textContent='0:00';
+    if(play)play.textContent='▶';
   }
-  toggle?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();player.classList.toggle('open');toggle.setAttribute('aria-expanded',String(player.classList.contains('open')));});
-  close?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();player.classList.remove('open');});
-  play?.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();try{if(audio.paused)await audio.play();else audio.pause();}catch{artist.textContent='tap play again to start ♡';}});
-  prev?.addEventListener('click',()=>load(ti-1,true));
-  next?.addEventListener('click',()=>load(ti+1,true));
-  audio.addEventListener('loadedmetadata',()=>{if(dur)dur.textContent=fmt(audio.duration);});
-  audio.addEventListener('timeupdate',()=>{const p=audio.duration?(audio.currentTime/audio.duration)*100:0;if(bar)bar.style.width=p+'%';if(now)now.textContent=fmt(audio.currentTime);});
-  audio.addEventListener('play',()=>{play.textContent='Ⅱ';player?.classList.add('playing');});
-  audio.addEventListener('pause',()=>{play.textContent='▶';player?.classList.remove('playing');});
-  audio.addEventListener('ended',()=>load(ti+1,true));
-  audio.addEventListener('error',()=>{artist.textContent='MP3 could not load — trying next ♡';setTimeout(()=>load(ti+1,false),500);});
-  trackBar?.addEventListener('click',e=>{if(!audio.duration)return;const r=trackBar.getBoundingClientRect();audio.currentTime=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*audio.duration;});
-  $('.player-note')?.replaceChildren(document.createTextNode(tracks.length+' MP3s live in your music corner · pick one and press play.'));
-  load(0,false);
+
+  async function playCurrent(){
+    try{
+      audio.muted=false;
+      await audio.play();
+    }catch(error){
+      const list=sources(tracks[ti][1]);
+      if(sourceIndex<list.length-1){
+        sourceIndex++;
+        setSource();
+        try{
+          await audio.play();
+          return;
+        }catch(_){}
+      }
+      artist.textContent='Tap play again to start the song ♡';
+      if(play)play.textContent='▶';
+      console.warn('Softy music playback failed',error);
+    }
+  }
+
+  function load(i){
+    ti=(i+tracks.length)%tracks.length;
+    sourceIndex=0;
+    updateTrackUi();
+    setSource();
+  }
+
+  /* Native details element: the click explicitly controls its open state. */
+  toggle?.addEventListener('click',e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(player) player.open=!player.open;
+    toggle.setAttribute('aria-expanded',String(!!player?.open));
+  });
+
+  close?.addEventListener('click',e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(player) player.open=false;
+    if(toggle)toggle.setAttribute('aria-expanded','false');
+  });
+
+  play?.addEventListener('click',async e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(audio.paused) await playCurrent();
+    else audio.pause();
+  });
+
+  prev?.addEventListener('click',async e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    load(ti-1);
+    await playCurrent();
+  });
+
+  next?.addEventListener('click',async e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    load(ti+1);
+    await playCurrent();
+  });
+
+  audio.addEventListener('loadedmetadata',()=>{
+    if(dur)dur.textContent=fmt(audio.duration);
+  });
+
+  audio.addEventListener('timeupdate',()=>{
+    const p=audio.duration?(audio.currentTime/audio.duration)*100:0;
+    if(bar)bar.style.width=p+'%';
+    if(now)now.textContent=fmt(audio.currentTime);
+  });
+
+  audio.addEventListener('play',()=>{
+    if(play)play.textContent='Ⅱ';
+    player?.classList.add('playing');
+  });
+
+  audio.addEventListener('pause',()=>{
+    if(play)play.textContent='▶';
+    player?.classList.remove('playing');
+  });
+
+  audio.addEventListener('ended',async()=>{
+    load(ti+1);
+    await playCurrent();
+  });
+
+  audio.addEventListener('error',async()=>{
+    const list=sources(tracks[ti][1]);
+    if(sourceIndex<list.length-1){
+      sourceIndex++;
+      setSource();
+      try{
+        await audio.play();
+      }catch(_){}
+    }else{
+      artist.textContent='This song could not be loaded ♡';
+      if(play)play.textContent='▶';
+    }
+  });
+
+  trackBar?.addEventListener('click',e=>{
+    if(!Number.isFinite(audio.duration))return;
+    const r=trackBar.getBoundingClientRect();
+    audio.currentTime=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*audio.duration;
+  });
+
+  player?.addEventListener('toggle',()=>{
+    toggle?.setAttribute('aria-expanded',String(!!player.open));
+  });
+
+  $('.player-note')?.replaceChildren(
+    document.createTextNode('Your songs live here · Until I Found You starts first.')
+  );
+
+  load(0);
 })();
+
