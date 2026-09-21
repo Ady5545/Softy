@@ -216,12 +216,51 @@ function pageProgress(element){
   return clamp((window.scrollY-absoluteTop)/travel);
 }
 
+function updateVisualStory(){
+  const section=document.getElementById('visualStory');
+  if(!section) return;
+  const p=pageProgress(section);
+  const visual=section.querySelector('.story-visual');
+  const flower=section.querySelector('.story-flower');
+  const orbitOne=section.querySelector('.orbit-one');
+  const orbitTwo=section.querySelector('.orbit-two');
+  const chapters=qsa('.story-chapter',section);
+  if(flower){
+    const scale=.72+p*.5;
+    const rotate=-8+p*20;
+    flower.style.transform='translate(-50%,-50%) scale('+scale.toFixed(3)+') rotate('+rotate.toFixed(2)+'deg)';
+    flower.style.opacity=String(.55+p*.45);
+  }
+  if(orbitOne) orbitOne.style.transform='translate(-50%,-50%) rotate('+(p*130).toFixed(2)+'deg) scale('+(1+p*.08).toFixed(3)+')';
+  if(orbitTwo) orbitTwo.style.transform='translate(-50%,-50%) rotate('+(-p*90).toFixed(2)+'deg) scale('+(1-p*.06).toFixed(3)+')';
+  if(visual){
+    visual.style.background='radial-gradient(circle at '+(50+p*18)+'% '+(45-p*8)+'%,#fff 0,#fff7fa 48%,var(--cream) 100%)';
+  }
+  chapters.forEach((chapter,i)=>{
+    const center=(i+.5)/chapters.length;
+    const dist=Math.abs(p-center);
+    const active=dist<.34;
+    const fade=clamp(1-dist/.42);
+    const card=chapter.querySelector('.story-card');
+    if(card){
+      const direction=i===1?-1:i===2?1:0;
+      const y=(1-fade)*55;
+      const x=direction*(1-fade)*70;
+      const scale=.94+fade*.06;
+      card.style.opacity=String(.2+fade*.8);
+      card.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0) scale('+scale.toFixed(3)+')';
+    }
+    chapter.classList.toggle('is-active',active);
+  });
+}
+
 function updateGlobalScroll(){
   const y=window.scrollY||window.pageYOffset||0;
   const max=Math.max(1,document.documentElement.scrollHeight-window.innerHeight);
   if(progressBar) progressBar.style.width=(y/max*100)+'%';
   const topbar=document.querySelector('.topbar');
   if(topbar) topbar.classList.toggle('scrolled',y>80);
+  updateVisualStory();
   updateMemoryStory();
 }
 let scrollTick=false;
@@ -362,6 +401,7 @@ function updateMemoryStory(){
   if(memoryStoryFinale) memoryStoryFinale.style.opacity=String(finale);
 }
 buildMemoryStory();
+requestAnimationFrame(()=>updateMemoryStory());
 qsa('.story-photo',memoryScene).forEach((card,index)=>{
   const img=card.querySelector('img');
   if(img && !img.dataset.bound){
@@ -401,47 +441,45 @@ if(photoModalNext) photoModalNext.addEventListener('click',()=>stepPhoto(1));
 if(photoModal) photoModal.addEventListener('click',e=>{if(e.target===photoModal) closePhotoModal()});
 
 const playlist=[
-  ["Until I Found You — Solo","until-i-found-you-solo.mp3"],
-  ["Until I Found You — Em Beihold Version","until-i-found-you-em-beihold-version.mp3"],
-  ["Here With Me","here-with-me.mp3"],
-  ["Young Dumb & Broke","young-dumb-broke.mp3"],
-  ["With You — AP Dhillon","with-you-ap-dhillon.mp3"],
-  ["I Wanna Be Yours","i-wanna-be-yours.mp3"],
-  ["Die For You","die-for-you.mp3"],
-  ["I Like the Way You Kiss Me — Sped Up","i-like-the-way-you-kiss-me-sped-up.mp3"],
-  ["Me Gustas Tu — Sped Up","me-gustas-tu-sped-up.mp3"],
-  ["Good Luck, Charm","good-luck-charm.mp3"],
-  ["Just the Two of Us","just-the-two-of-us.mp3"],
-  ["Put Your Head on My Shoulder","put-your-head-on-my-shoulder.mp3"],
-  ["We Fell in Love in October","we-fell-in-love-in-october.mp3"],
-  ["Double Take","double-take.mp3"],
-  ["Jo Tum Mere Ho","jo-tum-mere-ho.mp3"],
-  ["Teenage Dream","teenage-dream.mp3"],
-  ["Make You Mine","make-you-mine.mp3"],
-  ["This Is What Autumn Feels Like","this-is-what-autumn-feels-like.mp3"],
-  ["Die With A Smile","die-with-a-smile.mp3"],
-  ["Wildest Dreams","wildest-dreams.mp3"],
-  ["Lover — Shawn Mendes Version","lover-shawn-mendes-version.mp3"],
-  ["Her","her.mp3"],
-  ["Next to You","next-to-you.mp3"],
-  ["O Rangrez","o-rangrez.mp3"],
-  ["SAILOR SONG","sailor-song.mp3"],
-  ["No. 1 Party Anthem","no-1-party-anthem.mp3"],
-  ["My Love All Mine","my-love-all-mine.mp3"],
-  ["Number 1 Girl","number-1-girl.mp3"],
-  ["Gosh She Looks Pretty","gosh-she-looks-pretty.mp3"],
-  ["Valleys","valleys.mp3"],
-  ["I Love You So","i-love-you-so.mp3"],
-  ["Eenie Meenie","eenie-meenie.mp3"],
-  ["You Belong With Me","you-belong-with-me.mp3"],
-  ["Say Yes to Heaven","say-yes-to-heaven.mp3"],
-  ["Chaar Kadam","chaar-kadam.mp3"],
-  ["Dooron Dooron","dooron-dooron.mp3"],
-  ["Bairaiyya","bairaiyya.mp3"],
-  ["Rang Jo Lagyo","rang-jo-lagyo.mp3"],
-  ["Tere Bina","tere-bina.mp3"],
-  ["Thinking of You — AP Dhillon","thinking-of-you-ap-dhillon.mp3"],
-  ["Laavan","laavan.mp3"]
+  ["Until I Found You — Solo","stephen-sanchez-until-i-found-you-official-video-256kbps.webm"],
+  ["Until I Found You — Em Beihold Version","until-i-found-you-em-beihold-version-256kbps.webm"],
+  ["Here With Me","d4vd-here-with-me-official-music-video-128kbps.mp4"],
+  ["Young Dumb & Broke","khalid-young-dumb-broke-lyrics-256kbps.webm"],
+  ["With You — AP Dhillon","with-you-ap-dhillon-official-music-video-256kbps.webm"],
+  ["I Wanna Be Yours","arctic-monkeys-i-wanna-be-yours-256kbps.webm"],
+  ["Die For You","the-weeknd-die-for-you-128kbps.mp4"],
+  ["Good Luck, Charm","ks-makhan-good-luck-charm-320-kbps.mp3"],
+  ["Just the Two of Us","grover-washington-jr-just-the-two-of-us-feat-bill-withers-256-kbps.mp3"],
+  ["We Fell in Love in October","girl-in-red-we-fell-in-love-in-october-lyrics.mp3"],
+  ["Double Take","dhruv-double-take-lyrics.mp3"],
+  ["Jo Tum Mere Ho","anuv-jain-jo-tum-mere-ho-lyrics.mp3"],
+  ["Teenage Dream","stephen-dawes-teenage-dream-lyric-video.mp3"],
+  ["Make You Mine","public-make-you-mine-official-lyric-video.mp3"],
+  ["This Is What Autumn Feels Like","jvke-this-is-what-autumn-feels-like-official-lyric-video.mp3"],
+  ["Wildest Dreams","taylor-swift-wildest-dreams-lyrics.mp3"],
+  ["Lover — Shawn Mendes Version","taylor-swift-lover-remix-feat-shawn-mendes-lyric-video.mp3"],
+  ["Her","jvke-her-official-lyric-video.mp3"],
+  ["Next to You","jvke-next-to-you-official-lyric-video.mp3"],
+  ["O Rangrez","o-rangrez-lyrical-video-bhaag-milkha-bhaag-farhan-sonam-shreya-ghoshal-javed-bashir.mp3"],
+  ["SAILOR SONG","gigi-perez-sailor-song-lyrics-256kbps.webm"],
+  ["No. 1 Party Anthem","arctic-monkeys-no-1-party-anthem-lyrics.mp3"],
+  ["My Love All Mine","mitski-my-love-mine-all-mine-official-lyric-video.mp3"],
+  ["Number 1 Girl","rose-number-one-girl-lyrics.mp3"],
+  ["Gosh She Looks Pretty","nato-kitch-gosh-she-looks-pretty-visualizer.mp3"],
+  ["Valleys","woah-valleys-lyrics.mp3"],
+  ["I Love You So","the-walters-i-love-you-so-lyrics-256kbps.webm"],
+  ["Eenie Meenie","sean-kingston-justin-bieber-eenie-meenie-lyrics.mp3"],
+  ["You Belong With Me","taylor-swift-you-belong-with-me-lyrics.mp3"],
+  ["Dooron Dooron","dooron-dooron-lyrics-paresh-pahuja-feat-harleen-sethi-shiv-tandan-meghdeep-bose-vaibhav-raj.mp3"],
+  ["Bairaiyya","bairiyaa-atif-aslam-shreya-ghoshal-lyrics-lyrical-bam-hindi.mp3"],
+  ["Rang Jo Lagyo","rang-jo-lagyo-lyrical-ramaiya-vastavaiya-girish-kumar-shruti-haasan-atif-aslam-shreya-ghoshal.mp3"],
+  ["Tere Bina","a-r-rahman-tere-bina-lyrical-song-aishwarya-rai-abhishek-bachchan-guru-gulzar.mp3"],
+  ["Thinking of You — AP Dhillon","thinking-of-you-official-audio-ap-dhillon.mp3"],
+  ["Laavan","laavan-music-video-jasmine-sandlas-mofusion-pro-media.mp3"],
+  ["Salvatore","lana-del-rey-salvatore-lyrics.mp3"],
+  ["Gehra Hua","gehra-hua-lyrics-arijit-singh-armaan-khan-dhurandhar.mp3"],
+  ["I Love You Baby","frank-sinatra-i-love-you-baby-256kbps.webm"],
+  ["We Fell in Love in October — alternate file","girl-in-red-we-fell-in-love-in-october-lyrics-1.mp3"]
 ];
 
 function shuffle(items){
