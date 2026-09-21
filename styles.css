@@ -929,3 +929,24 @@ body.modal-open{overflow:hidden}
 #garden .garden-canvas .bloom{
   cursor:pointer!important;
 }
+
+/* ===== scrollytelling text readability ===== */
+.softy-story-card{
+  z-index:20!important;
+  background:rgba(255,255,255,.97)!important;
+  color:var(--ink)!important;
+  box-shadow:0 18px 55px rgba(67,21,43,.12)!important;
+}
+.softy-story-card.is-active{
+  z-index:100!important;
+  background:rgba(255,255,255,.99)!important;
+  box-shadow:0 34px 90px rgba(129,20,67,.18)!important;
+}
+.softy-story-card h3,
+.softy-story-card p,
+.softy-story-card span{
+  opacity:1!important;
+}
+.softy-scroll-story .section-heading{
+  z-index:10!important;
+}
