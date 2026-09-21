@@ -509,3 +509,15 @@ body.modal-open{overflow:hidden}
   .memory-table{height:2300px;width:94vw}
   .story-photo{width:clamp(72px,20vw,102px)!important}
 }
+
+/* clean archive finalization */
+.scroll-story,.story-stage,.story-visual,.story-chapters,.story-chapter,.story-card{position:static!important;height:auto!important;min-height:0!important}
+.scroll-story,.story-stage,.story-visual,.story-chapters{overflow:visible!important}
+.garden-section{height:auto!important;min-height:0!important}
+.memory-scrollytelling{height:auto!important;min-height:0!important}
+.memory-story-sticky{position:static!important;height:auto!important;min-height:0!important}
+.memory-archive{height:auto!important;min-height:0!important}
+.memory-table{position:relative!important;height:1400px!important}
+.memory-scene{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}
+@media(max-width:900px){.memory-table{height:1700px!important}}
+@media(max-width:560px){.memory-table{height:2300px!important}}
