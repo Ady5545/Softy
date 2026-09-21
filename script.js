@@ -664,6 +664,8 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
     return clamp((window.innerHeight*0.58-rect.top)/travel);
   }
 
+  const clickedBlooms=new Set();
+
   function updateGardenStory(){
     const p=gardenProgress();
 
@@ -676,9 +678,7 @@ window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
       stem.style.opacity=local>0 ? '1' : '.35';
     });
 
-    const clickedBlooms=new Set();
-
-  blooms.forEach((bloom,index)=>{
+    blooms.forEach((bloom,index)=>{
       if(clickedBlooms.has(index)){
         bloom.style.opacity='1';
         bloom.style.transformOrigin='center';
