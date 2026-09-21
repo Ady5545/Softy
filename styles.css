@@ -1682,3 +1682,19 @@ body.modal-open{overflow:hidden}
   .softy-chat-setup-actions{grid-template-columns:1fr}
   .softy-chat-head{padding-right:46px}
 }
+
+
+/* ===== chat cursor priority ===== */
+.has-heart-cursor .softy-chat,
+.has-heart-cursor .softy-chat *{
+  cursor:auto!important;
+}
+.has-heart-cursor .softy-chat button,
+.has-heart-cursor .softy-chat input,
+.has-heart-cursor .softy-chat .softy-chat-fab,
+.has-heart-cursor .softy-chat .softy-chat-copy{
+  cursor:pointer!important;
+}
+.has-heart-cursor .softy-chat input{
+  cursor:text!important;
+}
