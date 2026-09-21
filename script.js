@@ -758,13 +758,12 @@ function shuffle(items){
     if(e.key==='ArrowRight')show(current+1);
   });
 
-  /* MUSIC: one audio element, real Blob source first, Git LFS media second. */
+  /* MUSIC: exactly one audio engine + atomic track switching */
   const player=$('#musicPlayer'), toggle=$('#playerToggle'), close=$('#playerClose');
   const play=$('#playTrack'), prev=$('#prevTrack'), next=$('#nextTrack');
   const title=$('#trackTitle'), artist=$('#trackArtist'), bar=$('#playerProgress');
   const now=$('#currentTime'), dur=$('#duration'), trackBar=$('.player-progress');
 
-  /* Remove any earlier audio node/listeners from the experimental music code. */
   $$('audio').forEach(a=>a.remove());
 
   const audio=new Audio();
@@ -774,7 +773,17 @@ function shuffle(items){
   document.body.appendChild(audio);
 
   const defaultTrack='stephen-sanchez-until-i-found-you-official-video-256kbps.webm';
-  const tracks=[defaultTrack,...shuffle(playlist.filter(track=>track[1]!==defaultTrack).map(track=>track[1]))];
+  const files=[
+    defaultTrack,
+    ...shuffle(
+      playlist.map(track=>track[1]).filter(file=>file!==defaultTrack)
+    )
+  ];
+
+  let ti=0;
+  let sourceIndex=0;
+  let intendedPlaying=false;
+  let switchToken=0;
 
   function formatTrackName(file){
     return file
@@ -787,8 +796,6 @@ function shuffle(items){
       .trim()
       .replace(/\b\w/g,ch=>ch.toUpperCase());
   }
-  let ti=0;
-  let sourceIndex=0;
 
   function sources(file){
     const encoded=encodeURIComponent(file);
@@ -805,82 +812,141 @@ function shuffle(items){
       : '0:00';
   }
 
-  function setSource(){
-    const list=sources(tracks[ti]);
-    audio.src=list[sourceIndex];
-    audio.load();
-  }
-
-  function updateTrackUi(){
-    title.textContent=formatTrackName(tracks[ti]);
-    artist.textContent='music corner · '+(ti+1)+' / '+tracks.length;
+  function resetUi(){
     if(bar)bar.style.width='0%';
     if(now)now.textContent='0:00';
     if(dur)dur.textContent='0:00';
     if(play)play.textContent='▶';
   }
 
-  async function playCurrent(){
+  function stopCurrent(){
+    intendedPlaying=false;
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
+  }
+
+  function updateTrackUi(){
+    title.textContent=formatTrackName(files[ti]);
+    artist.textContent='music corner · '+(ti+1)+' / '+files.length;
+    resetUi();
+  }
+
+  function setCurrentSource(){
+    const list=sources(files[ti]);
+    audio.src=list[sourceIndex];
+    audio.load();
+  }
+
+  async function startCurrent(){
+    const token=switchToken;
+    intendedPlaying=true;
+
     try{
-      audio.muted=false;
       await audio.play();
-    }catch(error){
-      const list=sources(tracks[ti][1]);
+      if(token!==switchToken){
+        audio.pause();
+        return;
+      }
+    }catch(firstError){
+      const list=sources(files[ti]);
       if(sourceIndex<list.length-1){
-        sourceIndex++;
-        setSource();
+        sourceIndex+=1;
+        setCurrentSource();
         try{
           await audio.play();
-          return;
-        }catch(_){}
+          if(token!==switchToken) audio.pause();
+        }catch(secondError){
+          intendedPlaying=false;
+          if(play)play.textContent='▶';
+          artist.textContent='tap play again to start ♡';
+        }
+      }else{
+        intendedPlaying=false;
+        if(play)play.textContent='▶';
+        artist.textContent='tap play again to start ♡';
+        console.warn('Softy music playback failed',firstError);
       }
-      artist.textContent='Tap play again to start the song ♡';
-      if(play)play.textContent='▶';
-      console.warn('Softy music playback failed',error);
     }
   }
 
-  function load(i){
-    ti=(i+tracks.length)%tracks.length;
+  async function switchTrack(nextIndex,autoplay){
+    switchToken+=1;
+    const token=switchToken;
+
+    /* Absolutely stop the previous track before touching the source. */
+    intendedPlaying=false;
+    audio.pause();
+    audio.currentTime=0;
+    audio.removeAttribute('src');
+    audio.load();
+
+    ti=(nextIndex+files.length)%files.length;
     sourceIndex=0;
     updateTrackUi();
-    setSource();
+    setCurrentSource();
+
+    if(autoplay){
+      intendedPlaying=true;
+      try{
+        await audio.play();
+        if(token!==switchToken) audio.pause();
+      }catch(error){
+        const list=sources(files[ti]);
+        if(sourceIndex<list.length-1){
+          sourceIndex+=1;
+          setCurrentSource();
+          try{
+            await audio.play();
+            if(token!==switchToken) audio.pause();
+          }catch(_){
+            intendedPlaying=false;
+            if(play)play.textContent='▶';
+            artist.textContent='tap play again to start ♡';
+          }
+        }else{
+          intendedPlaying=false;
+          if(play)play.textContent='▶';
+          artist.textContent='tap play again to start ♡';
+        }
+      }
+    }
   }
 
-  /* Native details element: the click explicitly controls its open state. */
   toggle?.addEventListener('click',e=>{
     e.preventDefault();
     e.stopPropagation();
-    if(player) player.open=!player.open;
+    if(player)player.open=!player.open;
     toggle.setAttribute('aria-expanded',String(!!player?.open));
   });
 
   close?.addEventListener('click',e=>{
     e.preventDefault();
     e.stopPropagation();
-    if(player) player.open=false;
+    if(player)player.open=false;
     if(toggle)toggle.setAttribute('aria-expanded','false');
   });
 
   play?.addEventListener('click',async e=>{
     e.preventDefault();
     e.stopPropagation();
-    if(audio.paused) await playCurrent();
-    else audio.pause();
+    if(audio.paused) await startCurrent();
+    else{
+      intendedPlaying=false;
+      audio.pause();
+    }
   });
 
   prev?.addEventListener('click',async e=>{
     e.preventDefault();
     e.stopPropagation();
-    load(ti-1);
-    await playCurrent();
+    await switchTrack(ti-1,true);
   });
 
   next?.addEventListener('click',async e=>{
     e.preventDefault();
     e.stopPropagation();
-    load(ti+1);
-    await playCurrent();
+    await switchTrack(ti+1,true);
   });
 
   audio.addEventListener('loadedmetadata',()=>{
@@ -904,22 +970,15 @@ function shuffle(items){
   });
 
   audio.addEventListener('ended',async()=>{
-    load(ti+1);
-    await playCurrent();
+    if(!intendedPlaying) return;
+    await switchTrack(ti+1,true);
   });
 
-  audio.addEventListener('error',async()=>{
-    const list=sources(tracks[ti][1]);
-    if(sourceIndex<list.length-1){
-      sourceIndex++;
-      setSource();
-      try{
-        await audio.play();
-      }catch(_){}
-    }else{
-      artist.textContent='This song could not be loaded ♡';
-      if(play)play.textContent='▶';
-    }
+  audio.addEventListener('error',()=>{
+    /* Do not start a different track from an error event.
+       Track switching owns all source changes. */
+    if(play)play.textContent='▶';
+    if(intendedPlaying) artist.textContent='trying another copy…';
   });
 
   trackBar?.addEventListener('click',e=>{
@@ -936,7 +995,9 @@ function shuffle(items){
     document.createTextNode('Your songs live here · Until I Found You starts first.')
   );
 
-  load(0);
+  updateTrackUi();
+  setCurrentSource();
+
 })();
 
 
