@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#d81b60" />
+  <meta name="description" content="A tiny private corner made with love." />
+  <title>Softy — just for you ♡</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+  <div id="petals" class="petals" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="logo" href="#home" aria-label="Softy home">
+      <span class="logo-heart">♥</span>
+      <span>softy</span>
+    </a>
+    <button id="surpriseBtn" class="tiny-button" type="button">a tiny surprise ✨</button>
+  </header>
+
+  <main id="home">
+    <section class="hero section-shell">
+      <div class="hero-copy reveal">
+        <p class="eyebrow">a little corner of the internet</p>
+        <h1>For my favourite<br /><em>human.</em></h1>
+        <p class="hero-text">A place for all the things that are too cute, too random, or too important to leave buried in a chat.</p>
+        <div class="hero-actions">
+          <a class="primary-button" href="#bouquet">open the flowers <span>↓</span></a>
+          <button id="letterButton" class="text-button" type="button">there's a letter for you</button>
+        </div>
+      </div>
+
+      <div class="hero-bouquet-card reveal">
+        <div class="sparkle sparkle-a">✦</div>
+        <div class="sparkle sparkle-b">·</div>
+        <div id="heroBouquet" class="mini-bouquet" aria-label="A randomly arranged bouquet"></div>
+        <p>the flowers change every time you visit 🌷</p>
+      </div>
+    </section>
+
+    <section id="bouquet" class="section-shell bouquet-section">
+      <div class="section-heading reveal">
+        <p class="eyebrow">01 · bouquet machine</p>
+        <h2>One bouquet.<br /><em>Never quite the same.</em></h2>
+        <p>Because apparently one bouquet is not enough. Tap the button and let Softy make another tiny arrangement.</p>
+      </div>
+
+      <div class="bouquet-stage reveal">
+        <div id="bouquetCanvas" class="bouquet-canvas"></div>
+        <div class="bouquet-note">
+          <span id="bouquetCaption">picked especially for you</span>
+          <button id="newBouquet" class="round-button" type="button" aria-label="Make a new bouquet">↻</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-shell notes-section">
+      <div class="section-heading reveal">
+        <p class="eyebrow">02 · tiny things</p>
+        <h2>Things I hope you<br /><em>never forget.</em></h2>
+      </div>
+      <div class="note-grid">
+        <article class="note-card pink reveal">
+          <span class="card-number">01</span>
+          <span class="card-icon">♡</span>
+          <h3>You make ordinary days softer.</h3>
+          <p>Even the completely random ones. Especially those.</p>
+        </article>
+        <article class="note-card rose reveal">
+          <span class="card-number">02</span>
+          <span class="card-icon">✦</span>
+          <h3>You are allowed to take up space.</h3>
+          <p>Your laugh, your opinions, your weird little thoughts — all of it.</p>
+        </article>
+        <article class="note-card candy reveal">
+          <span class="card-number">03</span>
+          <span class="card-icon">☼</span>
+          <h3>There is always another good day.</h3>
+          <p>And if today isn't one, we don't have to pretend it is.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-shell jar-section">
+      <div class="jar-copy reveal">
+        <p class="eyebrow">03 · message jar</p>
+        <h2>Pick a little<br /><em>random thought.</em></h2>
+        <p>There are lots more coming later — written in your own words, with all the wonderfully random details that make this yours.</p>
+        <button id="messageButton" class="primary-button" type="button">pick one for me ✨</button>
+      </div>
+      <div class="jar-card reveal">
+        <div class="jar-lid"></div>
+        <div class="jar-glass">
+          <div class="paper-note" id="messageNote">
+            <span>♡</span>
+            <p>click the button.<br />I put a thought in here.</p>
+          </div>
+          <div class="jar-hearts">♥ · ♡ · ♥ · ♡</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-shell memories-section">
+      <div class="section-heading reveal">
+        <p class="eyebrow">04 · our little archive</p>
+        <h2>Somewhere between<br /><em>then & now.</em></h2>
+        <p>Photos will live here once you send the zip. For now, these are placeholders waiting for the real memories.</p>
+      </div>
+      <div class="memory-grid">
+        <div class="memory-placeholder tall reveal"><span>your photos<br />will go here ♡</span></div>
+        <div class="memory-placeholder reveal"><span>tiny moments</span></div>
+        <div class="memory-placeholder reveal"><span>big smiles</span></div>
+        <div class="memory-placeholder wide reveal"><span>the kind of memory that deserves its own screen</span></div>
+      </div>
+    </section>
+
+    <section class="section-shell open-when-section">
+      <div class="section-heading reveal">
+        <p class="eyebrow">05 · open when</p>
+        <h2>For the days when<br /><em>you need a little something.</em></h2>
+      </div>
+      <div class="open-grid">
+        <button class="open-card reveal" data-open="bad">Open when today is a bit rubbish <span>→</span></button>
+        <button class="open-card reveal" data-open="happy">Open when you're ridiculously happy <span>→</span></button>
+        <button class="open-card reveal" data-open="miss">Open when you miss me <span>→</span></button>
+        <button class="open-card reveal" data-open="random">Open for absolutely no reason <span>→</span></button>
+      </div>
+    </section>
+
+
+    <section class="section-shell little-section">
+      <div class="section-heading reveal">
+        <p class="eyebrow">06 · little things</p>
+        <h2>For no particular<br /><em>reason at all.</em></h2>
+        <p>A few tiny interactions for when you feel like clicking around. None of them are important. That's the point.</p>
+      </div>
+      <div class="little-grid">
+        <button class="little-card reveal" id="moodButton" type="button">
+          <span class="little-icon">☼</span>
+          <span class="little-label">mood check</span>
+          <strong id="moodText">tap me for a tiny mood</strong>
+          <small>changes every time</small>
+        </button>
+        <button class="little-card reveal" id="wishButton" type="button">
+          <span class="little-icon">✦</span>
+          <span class="little-label">make a wish</span>
+          <strong>throw a little wish into the sky</strong>
+          <small>watch the stars for a second</small>
+        </button>
+        <button class="little-card reveal" id="counterButton" type="button">
+          <span class="little-icon">♡</span>
+          <span class="little-label">tiny counter</span>
+          <strong><span id="visitCount">0</span> little surprises opened</strong>
+          <small>this one remembers</small>
+        </button>
+      </div>
+    </section>
+
+    <section class="section-shell footer-love">
+      <div class="footer-card reveal">
+        <span class="big-heart">♥</span>
+        <p class="eyebrow">07 · final note</p>
+        <h2>Made slowly.<br /><em>With ridiculous amounts of care.</em></h2>
+        <p>This little website is going to keep growing — more photos, more letters, more inside jokes, more tiny surprises.</p>
+        <span class="signature">— yours, with love ♡</span>
+      </div>
+    </section>
+  </main>
+
+  <div id="letterModal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="letter"></div>
+    <article class="modal-paper">
+      <button class="modal-close" data-close="letter" aria-label="Close">×</button>
+      <p class="eyebrow">a letter, for now</p>
+      <h2>Hey, you.</h2>
+      <p>I wanted a place that could hold the tiny things I don't always say at the right moment.</p>
+      <p>So this is version one. The rest gets filled with our photos, your favourite things, stupid jokes, proper letters, and all the random messages I decide belong here.</p>
+      <p class="handwritten">Until then, consider this a little digital flower bouquet. ♡</p>
+    </article>
+  </div>
+
+  <div id="messageModal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="message"></div>
+    <article class="modal-paper small-paper">
+      <button class="modal-close" data-close="message" aria-label="Close">×</button>
+      <p class="eyebrow">you picked one</p>
+      <p id="modalMessage" class="big-message"></p>
+    </article>
+  </div>
+
+  <footer class="site-footer">softy · a private little corner ♡</footer>
+  <script src="script.js"></script>
+</body>
+</html>
