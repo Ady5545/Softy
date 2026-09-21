@@ -796,3 +796,40 @@ body.modal-open{overflow:hidden}
 #softyAudio{display:none!important}
 @media(max-width:900px){.memory-table{height:1750px!important}}
 @media(max-width:560px){.memory-table{height:2400px!important;width:94vw!important}}
+
+/* ===== final polish: visible cursor over music player ===== */
+.has-heart-cursor .music-player,
+.has-heart-cursor .music-player *{
+  cursor:auto!important;
+}
+.has-heart-cursor .music-player .player-toggle,
+.has-heart-cursor .music-player button,
+.has-heart-cursor .music-player summary{
+  cursor:pointer!important;
+}
+
+/* ===== final polish: restore tighter photo spread ===== */
+#memories .memory-table{
+  height:1400px!important;
+  min-height:1400px!important;
+}
+@media(max-width:900px){
+  #memories .memory-table{
+    height:1700px!important;
+    min-height:1700px!important;
+  }
+}
+@media(max-width:560px){
+  #memories .memory-table{
+    height:2300px!important;
+    min-height:2300px!important;
+  }
+}
+
+/* ===== final polish: chapter text stays readable while inactive ===== */
+.softy-story-card{
+  opacity:var(--story-opacity,0.5)!important;
+}
+.softy-story-card.is-active{
+  opacity:1!important;
+}
