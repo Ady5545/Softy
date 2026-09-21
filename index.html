@@ -59,61 +59,32 @@
     <section class="softy-chat-panel" id="softyChatPanel" aria-hidden="true">
       <header class="softy-chat-head">
         <div>
-          <p class="eyebrow">a private corner for two</p>
+          <p class="eyebrow">just the two of you</p>
           <h2>our little chat <span>♡</span></h2>
         </div>
         <div class="softy-chat-status" id="softyChatStatus">
           <span class="softy-chat-status-dot"></span>
-          <span>not connected</span>
+          <span>connecting…</span>
         </div>
         <button class="softy-chat-close" id="softyChatClose" type="button" aria-label="Close chat">×</button>
       </header>
 
       <div class="softy-chat-body">
-        <div class="softy-chat-intro" id="softyChatIntro">
-          <div class="softy-chat-intro-heart">♡</div>
-          <h3>Just the two of you.</h3>
-          <p>No login. No room codes. Your chat gets one private invite link, then it remembers the room on each device.</p>
-
-          <label class="softy-chat-name-field">
-            <span>your name</span>
-            <input id="softyChatName" type="text" maxlength="18" autocomplete="nickname" placeholder="your name" />
-          </label>
-
-          <button class="softy-chat-primary softy-chat-start" id="softyChatStart" type="button">
-            start our private chat
-          </button>
-
-          <button class="softy-chat-secondary softy-chat-restore" id="softyChatRestore" type="button" hidden>
-            I already have our private link
-          </button>
-
-          <p class="softy-chat-footnote">Your messages are encrypted in the browser before they are stored. The chat needs a private invite link once; there is no password or login.</p>
-          <p class="softy-chat-error" id="softyChatError" role="alert"></p>
-        </div>
-
-        <div class="softy-chat-room" id="softyChatRoom" hidden>
+        <div class="softy-chat-room" id="softyChatRoom">
           <div class="softy-chat-room-card">
             <div>
-              <span class="eyebrow">our private chat</span>
-              <strong id="softyChatRoomTitle">just us ♡</strong>
-              <small id="softyChatRoomState">connecting…</small>
-            </div>
-            <div class="softy-chat-room-actions">
-              <button class="softy-chat-copy" id="softyChatShare" type="button">share private link</button>
-              <button class="softy-chat-leave" id="softyChatForget" type="button">forget</button>
-            </div>
-          </div>
-
-          <div class="softy-chat-waiting" id="softyChatWaiting">
-            <span class="waiting-orbit">♡</span>
-            <div>
-              <strong>One tiny setup.</strong>
-              <p>Share the private link once. After that, both devices can simply open Softy and the chat stays here.</p>
+              <span class="eyebrow">private corner · 143</span>
+              <strong>always the same chat</strong>
+              <small id="softyChatRoomState">opening your messages…</small>
             </div>
           </div>
 
           <div class="softy-chat-messages" id="softyChatMessages" aria-live="polite" aria-label="Chat messages"></div>
+          <div class="softy-chat-empty" id="softyChatEmpty">
+            <span>♡</span>
+            <p>Nothing here yet.</p>
+            <small>Leave a little message for later.</small>
+          </div>
           <div class="softy-chat-typing" id="softyChatTyping" aria-live="polite" aria-hidden="true"></div>
 
           <form class="softy-chat-compose" id="softyChatCompose">
@@ -121,7 +92,7 @@
             <input id="softyChatInput" type="text" maxlength="500" autocomplete="off" placeholder="write something sweet..." aria-label="Message" disabled />
             <button class="softy-chat-send" type="submit" aria-label="Send message" disabled>↑</button>
           </form>
-          <p class="softy-chat-live-note">encrypted on your device · saved for both of you</p>
+          <p class="softy-chat-live-note">no login · no link · no setup each time · chat 143</p>
         </div>
       </div>
     </section>
