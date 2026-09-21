@@ -48,6 +48,86 @@
     </div>
   </details>
 
+  
+  <aside class="softy-chat" id="softyChat" aria-label="Little chat">
+    <button class="softy-chat-fab" id="softyChatFab" type="button" aria-expanded="false" aria-controls="softyChatPanel">
+      <span class="softy-chat-fab-icon">♡</span>
+      <span class="softy-chat-fab-label">chat</span>
+      <span class="softy-chat-unread" id="softyChatUnread" aria-hidden="true">0</span>
+    </button>
+
+    <section class="softy-chat-panel" id="softyChatPanel" aria-hidden="true">
+      <div class="softy-chat-head">
+        <div>
+          <p class="eyebrow">a little corner for two</p>
+          <h2>our little chat <span>♡</span></h2>
+        </div>
+        <div class="softy-chat-status" id="softyChatStatus">
+          <span class="softy-chat-status-dot"></span>
+          <span>offline</span>
+        </div>
+        <button class="softy-chat-close" id="softyChatClose" type="button" aria-label="Close chat">×</button>
+      </div>
+
+      <div class="softy-chat-body">
+        <div class="softy-chat-intro" id="softyChatIntro">
+          <div class="softy-chat-intro-heart">♡</div>
+          <h3>Just you two.</h3>
+          <p>A tiny live chat tucked inside Softy. Messages travel directly between the two open pages.</p>
+
+          <label class="softy-chat-name-field">
+            <span>your name</span>
+            <input id="softyChatName" type="text" maxlength="18" autocomplete="nickname" placeholder="type your name" />
+          </label>
+
+          <div class="softy-chat-setup-actions">
+            <button class="softy-chat-primary" id="softyChatCreate" type="button">create a room</button>
+            <button class="softy-chat-secondary" id="softyChatShowJoin" type="button">join with a code</button>
+          </div>
+
+          <div class="softy-chat-join-box" id="softyChatJoinBox" hidden>
+            <label class="softy-chat-name-field">
+              <span>room code</span>
+              <input id="softyChatRoomCode" type="text" inputmode="text" maxlength="6" autocomplete="off" placeholder="e.g. K7P2Q9" />
+            </label>
+            <button class="softy-chat-primary" id="softyChatJoin" type="button">join the room</button>
+          </div>
+
+          <p class="softy-chat-footnote">No account needed. A room stays live while both of you have the page open.</p>
+          <p class="softy-chat-error" id="softyChatError" role="alert"></p>
+        </div>
+
+        <div class="softy-chat-room" id="softyChatRoom" hidden>
+          <div class="softy-chat-room-card">
+            <div>
+              <span class="eyebrow">room code</span>
+              <strong id="softyChatRoomCodeDisplay">------</strong>
+            </div>
+            <button class="softy-chat-copy" id="softyChatCopy" type="button">copy</button>
+          </div>
+
+          <div class="softy-chat-empty" id="softyChatEmpty">
+            <span>✦</span>
+            <p>Say something first.</p>
+            <small>Your little corner is ready.</small>
+          </div>
+
+          <div class="softy-chat-messages" id="softyChatMessages" aria-live="polite" aria-label="Chat messages"></div>
+
+          <div class="softy-chat-typing" id="softyChatTyping" aria-live="polite" aria-hidden="true"></div>
+
+          <form class="softy-chat-compose" id="softyChatCompose">
+            <button class="softy-chat-heart" id="softyChatHeart" type="button" aria-label="Send a heart">♡</button>
+            <input id="softyChatInput" type="text" maxlength="500" autocomplete="off" placeholder="write something sweet..." aria-label="Message" />
+            <button class="softy-chat-send" type="submit" aria-label="Send message">↑</button>
+          </form>
+          <p class="softy-chat-live-note">live together · not stored on a server</p>
+        </div>
+      </div>
+    </section>
+  </aside>
+
+
   <main id="home">
     <section class="hero section-shell">
       <div class="hero-copy reveal">
@@ -313,6 +393,7 @@
   <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
   <footer class="site-footer">softy · a private little corner ♡</footer>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
