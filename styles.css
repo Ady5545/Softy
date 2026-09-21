@@ -909,3 +909,23 @@ body.modal-open{overflow:hidden}
 .softy-story-card{opacity:var(--story-opacity,0.72)!important}
 .softy-story-card.is-active{opacity:1!important}
 .garden-flower-pop{transform:scale(1.18)!important}
+
+/* ===== garden interaction safety ===== */
+#garden .garden-canvas{
+  position:relative!important;
+  z-index:10!important;
+  pointer-events:auto!important;
+}
+#garden .garden-svg{
+  position:relative!important;
+  z-index:11!important;
+  pointer-events:auto!important;
+}
+#garden .garden-svg .bloom,
+#garden .garden-svg .bloom *,
+#garden .garden-svg .garden-stem{
+  pointer-events:auto!important;
+}
+#garden .garden-canvas .bloom{
+  cursor:pointer!important;
+}
