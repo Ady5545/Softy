@@ -197,7 +197,7 @@ if(window.matchMedia('(pointer:fine)').matches){
 }
 
 /* Photo archive + music collection */
-const photoNames=["photo-001","photo-002","photo-003","photo-004","photo-005","photo-006","photo-007","photo-008","photo-009","photo-010","photo-011","photo-012","photo-013","photo-014","photo-015","photo-016","photo-017","photo-018","photo-019","photo-020","photo-021","photo-022","photo-023","photo-024","photo-025","photo-026","photo-027","photo-028","photo-029","photo-030","photo-031","photo-032","photo-033","photo-034","photo-035","photo-036","photo-037","photo-038","photo-039","photo-040","photo-041","photo-042","photo-043","photo-044","photo-045","photo-046","photo-047","photo-048","photo-049","photo-050","photo-051","photo-052","photo-053","photo-054","photo-055","photo-056","photo-057","photo-058","photo-059","photo-060","photo-061","photo-062","photo-063","photo-064","photo-065","photo-066","photo-067","photo-068","photo-069","photo-070","photo-071","photo-072","photo-073","photo-074","photo-075","photo-076","photo-077","photo-078","photo-079","photo-080","photo-081","photo-082","photo-083","photo-084","photo-085","photo-086","photo-087","photo-088","photo-089","photo-090","photo-091"];
+const photoNames=["Copy of 20250414_205158.jpg","610.jpg","771.jpg","Copy of 20250418_065929.jpg","1018.jpg","413.jpg","1193.jpg","836.jpg","565.jpg","940.jpg","982.jpg","1225.jpg","570.jpg","564.jpg","558.jpg","835.jpg","1194.jpg","945.jpg","986.jpg","950.jpg","944.jpg","1168.jpg","1237.jpg","1009.jpg","263.jpg","1091.jpg","1000001011.jpg","923.jpg","Copy of IMG_20250415_215058_524.jpg","922.jpg","Copy of Snapchat-211457099.jpg","1108.jpg","517.jpg","1083.jpg","1256.jpg","1242.jpg","1281.jpg","1243.jpg","1257.jpg","516.jpg","879.jpg","1123.jpg","1094.jpg","925.jpg","449.jpg","Copy of 20250414_205315.jpg","1311.jpg","450.jpg","1073.jpg","518.jpg","915.jpg","1265.jpg","1072.jpg","451.jpg","Copy of 20250401_180856.jpg","Copy of 20250319_184735.jpg","1312.jpg","447.jpg","1266.jpg","1267.jpg","917.jpg","1071.jpg","330.jpg","1061.jpg","912.jpg","1060.jpg","325.jpg","496.jpg","Copy of Snapchat-415738145.jpg","Copy of Snapchat-510064617.jpg","508.jpg","497.jpg","1010.jpg","Copy of 20250208_155121.jpg","1206.jpg","Copy of Snapchat-1870040060.jpg","Copy of Snapchat-1152265864.jpg","Copy of 20250418_065842.jpg","1007.jpg","1204.jpg","1006.jpg","756.jpg","Copy of Snapchat-430357962.jpg","Copy of 20250418_065924.jpg","Copy of 20250414_205222.jpg","1203.jpg","Copy of 20250208_155124.jpg","782.jpg","1174.jpg","609.jpg"];
 const memoryGrid=document.getElementById('memoryGrid');
 if(memoryGrid){
   memoryGrid.innerHTML='';
@@ -213,7 +213,7 @@ const playlist=[{"title":"Until I Found You — Solo","src":"assets/music/until-
 const audio=document.createElement('audio');
 audio.preload='metadata';
 document.body.appendChild(audio);
-let trackIndex=0;
+let trackIndex=Math.floor(Math.random()*playlist.length);
 const trackTitle=document.getElementById('trackTitle');
 const trackArtist=document.getElementById('trackArtist');
 const playButton=document.getElementById('playTrack');
@@ -222,7 +222,7 @@ const currentTime=document.getElementById('currentTime');
 const duration=document.getElementById('duration');
 function fmt(t){if(!Number.isFinite(t))return '0:00';return Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0')}
 function loadTrack(i,autoplay=false){trackIndex=(i+playlist.length)%playlist.length;const track=playlist[trackIndex];trackTitle.textContent=track.title;trackArtist.textContent='Softy playlist · '+(trackIndex+1)+' / '+playlist.length;audio.src=track.src;audio.load();if(autoplay)audio.play().catch(()=>{});playButton.textContent='▶'}
-loadTrack(0);
+loadTrack(trackIndex);
 playButton.addEventListener('click',()=>{if(audio.paused){audio.play().then(()=>playButton.textContent='Ⅱ').catch(()=>{});}else{audio.pause();playButton.textContent='▶'}});
 document.getElementById('prevTrack').addEventListener('click',()=>loadTrack(trackIndex-1,true));
 document.getElementById('nextTrack').addEventListener('click',()=>loadTrack(trackIndex+1,true));
@@ -231,3 +231,26 @@ audio.addEventListener('play',()=>playButton.textContent='Ⅱ');audio.addEventLi
 document.querySelector('.player-progress').addEventListener('click',e=>{if(!audio.duration)return;const r=e.currentTarget.getBoundingClientRect();audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration});
 const musicPlayer=document.getElementById('musicPlayer');
 document.getElementById('playerToggle').addEventListener('click',()=>musicPlayer.classList.toggle('open'));document.getElementById('playerClose').addEventListener('click',()=>musicPlayer.classList.remove('open'));
+
+/* Heart cursor */
+const heartCursor=document.getElementById('heartCursor');
+if(heartCursor && window.matchMedia('(pointer:fine)').matches){document.body.classList.add('has-heart-cursor');window.addEventListener('pointermove',e=>{heartCursor.style.left=e.clientX+'px';heartCursor.style.top=e.clientY+'px';},{passive:true});}
+
+/* Unlock My Heart */
+const unlockButton=document.getElementById('unlockButton');
+const unlockModal=document.getElementById('unlockModal');
+const unlockHeart=document.getElementById('unlockHeart');
+const lockStatus=document.getElementById('lockStatus');
+if(unlockButton)unlockButton.addEventListener('click',()=>openModal('unlockModal'));
+if(unlockHeart)unlockHeart.addEventListener('click',()=>{document.getElementById('lockIcon').textContent='💗';lockStatus.textContent='Unlocked. Welcome to the softest part of Softy. ♡';unlockHeart.textContent='heart unlocked ♡';unlockHeart.disabled=true;document.querySelector('.lock-paper').classList.add('unlocked');});
+document.querySelectorAll('[data-close="unlock"]').forEach(el=>el.addEventListener('click',()=>closeModal('unlockModal')));
+
+/* Scroll-grown SVG garden */
+const garden=document.getElementById('garden');
+const gardenCanvas=document.getElementById('gardenCanvas');
+if(gardenCanvas){
+  const paths=[...gardenCanvas.querySelectorAll('.garden-stem,.bloom path,.bloom circle')];
+  paths.forEach(p=>{const len=p.getTotalLength?p.getTotalLength():100;p.style.strokeDasharray=len;p.style.strokeDashoffset=len;});
+  const growGarden=()=>{const r=garden.getBoundingClientRect();const p=Math.min(1,Math.max(0,(window.innerHeight-r.top)/(r.height+window.innerHeight*.35)));gardenCanvas.style.setProperty('--garden-progress',p);paths.forEach((path,i)=>{const len=path.getTotalLength?path.getTotalLength():100;path.style.strokeDashoffset=String(len*(1-p));path.style.opacity=String(Math.min(1,p*1.8));});};
+  window.addEventListener('scroll',growGarden,{passive:true});growGarden();
+}
