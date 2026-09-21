@@ -609,3 +609,183 @@ document.addEventListener('keydown',e=>{
 });
 
 window.addEventListener('blur',()=>{if(audio&&!audio.paused) audio.pause();});
+
+
+/* ================= SOFTY FINAL INTERACTION REPAIR =================
+   This pass intentionally overrides the earlier experimental scroll/photo/music
+   implementations instead of stacking another dependency on top of them.
+==================================================================== */
+
+(function softyFinalRepair(){
+  const $ = (s,r=document)=>r.querySelector(s);
+  const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+
+  /* ---------- REAL SCROLL STORY ---------- */
+  const chapterSection = $('#chapters');
+  const chapterCards = $$('.chapter-card', chapterSection);
+  if (chapterSection && chapterCards.length) {
+    chapterSection.classList.add('softy-scroll-story');
+    chapterCards.forEach((card,i)=>{
+      card.classList.add('softy-story-card');
+      card.style.setProperty('--story-index', i);
+    });
+
+    let storyRaf = 0;
+    function updateChapterStory(){
+      storyRaf = 0;
+      const rect = chapterSection.getBoundingClientRect();
+      const travel = Math.max(1, rect.height - window.innerHeight);
+      const p = clamp(-rect.top / travel);
+      const n = chapterCards.length;
+      chapterCards.forEach((card,i)=>{
+        const center = (i + 0.5) / n;
+        const distance = Math.abs(p - center);
+        const active = distance < 0.18;
+        const local = clamp((distance - 0.04) / 0.16);
+        const y = active ? (p < center ? 18 : -18) * local : (i < p*n ? -34 : 34);
+        const scale = active ? 1 : 0.92;
+        const opacity = active ? 1 : 0.22;
+        card.style.setProperty('--story-y', y.toFixed(2)+'px');
+        card.style.setProperty('--story-scale', scale);
+        card.style.setProperty('--story-opacity', opacity);
+        card.classList.toggle('is-active', active);
+      });
+    }
+    function scheduleChapterStory(){
+      if(storyRaf) return;
+      storyRaf = requestAnimationFrame(updateChapterStory);
+    }
+    window.addEventListener('scroll', scheduleChapterStory, {passive:true});
+    window.addEventListener('resize', scheduleChapterStory, {passive:true});
+    scheduleChapterStory();
+  }
+
+  /* ---------- PHOTO ARCHIVE: deterministic scattered positions ---------- */
+  const scene = $('#memoryScene');
+  const photos = $$('.story-photo', scene || document);
+  const colsFor = () => {
+    if(window.innerWidth <= 560) return 4;
+    if(window.innerWidth <= 900) return 6;
+    return 8;
+  };
+  function scatterPhotos(){
+    if(!scene || !photos.length) return;
+    const cols = colsFor();
+    const rows = Math.ceil(photos.length / cols);
+    photos.forEach((card,i)=>{
+      const row = Math.floor(i/cols), col = i%cols;
+      const x = 6 + (col/(Math.max(1,cols-1)))*88 + ((i*37)%9-4);
+      const y = 4 + (row/(Math.max(1,rows-1)))*92 + ((i*19)%7-3);
+      const rotation = -13 + ((i*17)%27);
+      const scale = 0.84 + ((i*23)%18)/100;
+      card.style.setProperty('--photo-x', x+'%');
+      card.style.setProperty('--photo-y', y+'%');
+      card.style.setProperty('--rotation', rotation+'deg');
+      card.style.setProperty('--base-scale', scale.toFixed(2));
+      card.style.zIndex = String(10 + (i%7));
+      card.classList.add('softy-photo-ready');
+    });
+  }
+  scatterPhotos();
+  window.addEventListener('resize', scatterPhotos, {passive:true});
+
+  /* ---------- EXACT PHOTO LIGHTBOX ---------- */
+  let currentPhoto = 0;
+  const photoModal = $('#photoModal');
+  const modalImg = $('#photoModalImage');
+  const modalCaption = $('#photoModalCaption');
+  const names = Array.from({length:90},(_,i)=>'photo-'+String(i+1).padStart(3,'0')+'.jpg');
+
+  function showPhoto(index){
+    if(!photoModal || !modalImg) return;
+    currentPhoto = (index + names.length) % names.length;
+    modalImg.src = names[currentPhoto];
+    modalImg.alt = 'Memory '+String(currentPhoto+1);
+    if(modalCaption) modalCaption.textContent = String(currentPhoto+1).padStart(2,'0')+' / '+String(names.length).padStart(2,'0');
+    photoModal.classList.add('open');
+    photoModal.setAttribute('aria-hidden','false');
+    document.body.classList.add('modal-open');
+  }
+  function hidePhoto(){
+    if(!photoModal) return;
+    photoModal.classList.remove('open');
+    photoModal.setAttribute('aria-hidden','true');
+    if(!$$('.modal.open, .photo-modal.open').length) document.body.classList.remove('modal-open');
+  }
+  window.openPhotoModal = showPhoto;
+  window.closePhotoModal = hidePhoto;
+
+  $$('.story-photo').forEach(card=>{
+    if(card.dataset.finalPhotoBound) return;
+    card.dataset.finalPhotoBound = 'true';
+    card.addEventListener('click',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      showPhoto(Number(card.dataset.index || 0));
+    });
+  });
+  const closePhoto = $('#photoModalClose');
+  const prevPhoto = $('#photoModalPrev');
+  const nextPhoto = $('#photoModalNext');
+  if(closePhoto) closePhoto.addEventListener('click',hidePhoto);
+  if(prevPhoto) prevPhoto.addEventListener('click',()=>showPhoto(currentPhoto-1));
+  if(nextPhoto) nextPhoto.addEventListener('click',()=>showPhoto(currentPhoto+1));
+  if(photoModal) photoModal.addEventListener('click',e=>{
+    if(e.target===photoModal || e.target.matches('.photo-modal-backdrop')) hidePhoto();
+  });
+  document.addEventListener('keydown',e=>{
+    if(!photoModal || !photoModal.classList.contains('open')) return;
+    if(e.key==='Escape') hidePhoto();
+    if(e.key==='ArrowLeft') showPhoto(currentPhoto-1);
+    if(e.key==='ArrowRight') showPhoto(currentPhoto+1);
+  });
+
+  /* ---------- MUSIC PLAYER: reliable open/close + graceful audio ---------- */
+  const player = $('#musicPlayer');
+  const toggle = $('#playerToggle');
+  const close = $('#playerClose');
+  const play = $('#playTrack');
+  const audio = document.querySelector('audio');
+  function setPlayer(open){
+    if(!player) return;
+    player.classList.toggle('open',open);
+    if(toggle) toggle.setAttribute('aria-expanded',String(open));
+  }
+  if(toggle){
+    toggle.onclick = e=>{ e.preventDefault(); e.stopPropagation(); setPlayer(!player.classList.contains('open')); };
+    toggle.onpointerdown = e=>e.stopPropagation();
+  }
+  if(close) close.onclick = e=>{e.preventDefault();e.stopPropagation();setPlayer(false);};
+  if(play && audio){
+    play.onclick = async e=>{
+      e.preventDefault();
+      if(audio.paused || audio.muted){
+        try{ audio.muted=false; await audio.play(); }
+        catch(err){
+          try{ audio.muted=true; await audio.play(); }
+          catch(_){}
+        }
+      }else audio.pause();
+    };
+  }
+
+  /* Browser autoplay policies may block sound until interaction; never let that
+     prevent the UI from opening. */
+  document.addEventListener('pointerdown',()=>{
+    if(audio && audio.muted){
+      audio.muted=false;
+      if(audio.paused && audio.src) audio.play().catch(()=>{});
+    }
+  },{once:true,passive:true});
+
+  /* Don't pause the user's music just because the tab briefly loses focus. */
+  window.removeEventListener('blur', window.__softyOldBlurHandler || (()=>{}));
+
+  /* Keep the player usable even if an external audio URL dies. */
+  if(audio){
+    audio.addEventListener('error',()=>{
+      const artist = $('#trackArtist');
+      if(artist) artist.textContent='music file unavailable · the player itself is working ♡';
+    });
+  }
+})();
