@@ -300,12 +300,12 @@ if(unlockHeart) unlockHeart.addEventListener('click',()=>{
 
 const photoNames=Array.from({length:90},(_,i)=>'photo-'+String(i+1).padStart(3,'0'));
 const memoryStory=[
-  ['One little moment.','The kind you almost scroll past before realizing you want to keep it forever.'],
-  ['Then another.','The gallery is not a wall of thumbnails anymore — it is a little world you can wander through.'],
-  ['And another.','Keep moving. The next memory is waiting somewhere unexpected.'],
-  ['Then somehow…','They stop feeling like separate pictures.'],
-  ['They become','a collection of tiny pieces of us.'],
-  ['And at the end,','they all get to exist together.']
+  ['One little moment.','Keep it.','The kind you almost scroll past before realizing you want to keep it forever.'],
+  ['Then another.','Find it.','The gallery is not a wall of thumbnails anymore — it is a little world you can wander through.'],
+  ['And another.','Keep moving.','The next memory is waiting somewhere unexpected.'],
+  ['Then somehow…','Something changes.','They stop feeling like separate pictures.'],
+  ['They become','a collection of us.','Tiny pieces begin to feel connected.'],
+  ['And at the end,','all together.','Every little frame gets to exist in the same place.']
 ];
 const memoryScene=document.getElementById('memoryScene');
 const memoryStorySection=document.getElementById('memories');
@@ -369,8 +369,8 @@ function updateMemoryStory(){
 
   const chapter=Math.min(memoryStory.length-1,Math.floor(p*memoryStory.length));
   const stageCopy=memoryStory[chapter];
-  if(memoryStoryTitle) memoryStoryTitle.innerHTML=stageCopy[0]+'<br><em>'+stageCopy[1].split(' — ')[0]+'</em>';
-  if(memoryStoryText) memoryStoryText.textContent=stageCopy[1].includes(' — ')?stageCopy[1].split(' — ').slice(1).join(' — '):stageCopy[1];
+  if(memoryStoryTitle) memoryStoryTitle.innerHTML=stageCopy[0]+'<br><em>'+stageCopy[1]+'</em>';
+  if(memoryStoryText) memoryStoryText.textContent=stageCopy[2];
   if(memoryStoryNumber) memoryStoryNumber.textContent=String(Math.min(cards.length,Math.floor(center)+1)).padStart(2,'0');
   if(memoryStoryCopy) memoryStoryCopy.style.transform='translateY('+(Math.sin(p*Math.PI*4)*10)+'px) scale('+(1-.035*finale)+')';
   if(memoryStorySticky) memoryStorySticky.classList.toggle('is-finale',finale>.4);
