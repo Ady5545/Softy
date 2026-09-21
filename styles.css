@@ -721,3 +721,63 @@ body.modal-open{overflow:hidden}
 .music-player{z-index:20000!important;pointer-events:auto!important}
 .player-toggle.vinyl-record{z-index:20002!important;pointer-events:auto!important;cursor:pointer!important}
 .player-panel{z-index:20001!important}
+
+
+/* ================= STATIC SCATTERED MEMORY ARCHIVE =================
+   The memory gallery is NOT a scrollyteller.
+   All photographs exist on the page immediately in a free-form scatter.
+   ================================================================ */
+#memories.memory-archive{
+  position:relative!important;
+}
+#memories .memory-table{
+  position:relative!important;
+  width:min(1180px,94vw)!important;
+  height:1900px!important;
+  min-height:1900px!important;
+  margin:40px auto 0!important;
+  overflow:visible!important;
+}
+#memories .memory-scene{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  overflow:visible!important;
+  pointer-events:auto!important;
+}
+#memories .story-photo,
+#memories .story-photo.softy-photo-ready{
+  position:absolute!important;
+  width:clamp(120px,12.5vw,175px)!important;
+  height:auto!important;
+  aspect-ratio:4/5!important;
+  margin:0!important;
+  padding:7px!important;
+  opacity:1!important;
+  visibility:visible!important;
+  display:block!important;
+  filter:none!important;
+  pointer-events:auto!important;
+  cursor:pointer!important;
+  transform:translate(-50%,-50%) rotate(var(--rotation,0deg)) scale(var(--base-scale,1))!important;
+  transition:transform .25s cubic-bezier(.16,1,.3,1),box-shadow .25s ease!important;
+}
+#memories .story-photo:hover{
+  transform:translate(-50%,-50%) rotate(var(--rotation,0deg)) scale(calc(var(--base-scale,1) + .09))!important;
+  z-index:9999!important;
+}
+#memories .story-photo img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  display:block!important;
+}
+@media(max-width:900px){
+  #memories .memory-table{height:2200px!important;min-height:2200px!important}
+  #memories .story-photo{width:clamp(90px,17vw,135px)!important}
+}
+@media(max-width:560px){
+  #memories .memory-table{height:3000px!important;min-height:3000px!important}
+  #memories .story-photo{width:clamp(72px,20vw,104px)!important}
+}
